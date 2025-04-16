@@ -28,6 +28,18 @@ export default {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
+                contract: {
+                    DEFAULT: '#1a4d8c',
+                    light: '#e6edf5',
+                    foreground: '#ffffff'
+                },
+                status: {
+                    draft: '#6b7280',
+                    pending: '#f59e0b',
+                    approved: '#10b981',
+                    rejected: '#ef4444',
+                    expired: '#6b7280'
+                },
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
