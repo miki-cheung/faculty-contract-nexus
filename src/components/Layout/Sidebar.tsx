@@ -68,22 +68,11 @@ export function Sidebar() {
 
       <div className="px-3 py-2">
         <div className="space-y-1">
-          <SidebarItem href="/dashboard" icon={Home}>
-            主页
-          </SidebarItem>
-
+          {/* 教师角色只显示"我的合同"导航项 */}
           {user.role === UserRole.TEACHER && (
-            <>
-              <SidebarItem href="/my-contracts" icon={FileText}>
-                我的合同
-              </SidebarItem>
-              <SidebarItem href="/apply" icon={FilePlus}>
-                合同申请
-              </SidebarItem>
-              <SidebarItem href="/profile" icon={UserCircle}>
-                个人资料
-              </SidebarItem>
-            </>
+            <SidebarItem href="/my-contracts" icon={FileText}>
+              我的合同
+            </SidebarItem>
           )}
 
           {user.role === UserRole.DEPT_ADMIN && (
@@ -128,10 +117,6 @@ export function Sidebar() {
               </SidebarItem>
             </>
           )}
-
-          <SidebarItem href="/notifications" icon={Bell} badge={unreadCount}>
-            通知
-          </SidebarItem>
         </div>
       </div>
 
