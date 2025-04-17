@@ -70,6 +70,8 @@ const Templates = () => {
         content: formData.content,
         applicableRoles: formData.applicableRoles.split(",").map(role => role.trim()),
         version: "1.0",
+        fields: [],
+        isActive: true
       });
       
       toast({
@@ -93,9 +95,9 @@ const Templates = () => {
     if (template) {
       setFormData({
         name: template.name,
-        description: template.description,
-        content: template.content,
-        applicableRoles: template.applicableRoles.join(", "),
+        description: template.description || "",
+        content: template.content || "",
+        applicableRoles: template.applicableRoles?.join(", ") || "",
       });
       setCurrentTemplate(templateId);
       setIsEditDialogOpen(true);
@@ -270,7 +272,7 @@ const Templates = () => {
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.name}</TableCell>
                   <TableCell>{template.description}</TableCell>
-                  <TableCell>{template.applicableRoles.join(", ")}</TableCell>
+                  <TableCell>{template.applicableRoles?.join(", ") || "所有角色"}</TableCell>
                   <TableCell>{template.version}</TableCell>
                   <TableCell>{format(new Date(template.createdAt), "yyyy-MM-dd")}</TableCell>
                   <TableCell>

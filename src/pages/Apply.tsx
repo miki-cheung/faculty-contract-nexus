@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileUpload, FileText, Save, Send } from "lucide-react";
+import { Upload, FileText, Save, Send } from "lucide-react";
 
 // Form schema
 const applyFormSchema = z.object({
@@ -79,7 +79,7 @@ const Apply = () => {
       title: "",
       startDate: "",
       endDate: "",
-      position: user?.title || "",
+      position: user?.position || "",
       details: "",
       additionalNotes: "",
       attachments: false,
@@ -121,7 +121,7 @@ const Apply = () => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
       form.setValue("title", `${template.name} 申请`);
-      form.setValue("details", template.description);
+      form.setValue("details", template.description || "");
     }
   };
 
@@ -319,7 +319,7 @@ const Apply = () => {
                         className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 hover:bg-gray-100"
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <FileUpload className="w-10 h-10 mb-3 text-gray-400" />
+                          <Upload className="w-10 h-10 mb-3 text-gray-400" />
                           <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                             <span className="font-semibold">点击上传</span> 或拖拽文件到此处
                           </p>

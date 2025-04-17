@@ -16,6 +16,7 @@ export interface User {
   position?: string;
   phone?: string;
   avatarUrl?: string;
+  title?: string; // Added title property
 }
 
 // Department Types
@@ -92,6 +93,8 @@ export interface ContractTemplate {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  content?: string; // Added content property
+  applicableRoles?: string[]; // Added applicableRoles property
 }
 
 // Attachment Types
