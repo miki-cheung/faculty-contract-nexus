@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useContracts } from "@/contexts/ContractContext";
 import { useTemplates } from "@/contexts/TemplateContext";
@@ -109,7 +108,6 @@ const translateType = (type: ContractType): string => {
   }
 };
 
-// 申请表单模式
 const applyFormSchema = z.object({
   templateId: z.string({
     required_error: "请选择合同模板",
@@ -153,7 +151,6 @@ const MyContracts = () => {
 
   const myContracts = contracts.filter(contract => contract.teacherId === user.id);
 
-  // 统计数据
   const activeContracts = myContracts.filter(contract => contract.status === ContractStatus.APPROVED);
   const pendingContracts = myContracts.filter(
     contract => [ContractStatus.PENDING_DEPT, ContractStatus.PENDING_HR].includes(contract.status)
@@ -161,14 +158,11 @@ const MyContracts = () => {
   const draftContracts = myContracts.filter(contract => contract.status === ContractStatus.DRAFT);
   const rejectedContracts = myContracts.filter(contract => contract.status === ContractStatus.REJECTED);
 
-  // 过滤合同
   const filteredContracts = myContracts.filter(contract => {
-    // 应用状态过滤
     if (statusFilter !== "all" && contract.status !== statusFilter) {
       return false;
     }
 
-    // 应用搜索过滤
     if (
       searchText &&
       !contract.title.toLowerCase().includes(searchText.toLowerCase())
@@ -179,7 +173,6 @@ const MyContracts = () => {
     return true;
   });
 
-  // 饼图数据
   const pieChartData = [
     { name: "有效合同", value: activeContracts.length, color: "#10b981" },
     { name: "待审批", value: pendingContracts.length, color: "#f59e0b" },
@@ -187,7 +180,6 @@ const MyContracts = () => {
     { name: "已拒绝", value: rejectedContracts.length, color: "#ef4444" },
   ].filter(item => item.value > 0);
 
-  // 柱状图数据 - 按月份统计
   const currentYear = new Date().getFullYear();
   const barChartData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
@@ -209,7 +201,6 @@ const MyContracts = () => {
     };
   });
 
-  // 合同申请表单
   const form = useForm<ApplyFormValues>({
     resolver: zodResolver(applyFormSchema),
     defaultValues: {
@@ -227,7 +218,6 @@ const MyContracts = () => {
   const onSubmit = async (values: ApplyFormValues) => {
     setIsSubmitting(true);
     
-    // 模拟API调用
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -254,7 +244,6 @@ const MyContracts = () => {
     setSelectedTemplate(templateId);
     form.setValue("templateId", templateId);
     
-    // 在实际应用中，我们会根据模板填充表单字段
     const template = templates.find(t => t.id === templateId);
     if (template) {
       form.setValue("title", `${template.name} 申请`);
@@ -271,9 +260,17 @@ const MyContracts = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">我的合同</h2>
-        <p className="text-muted-foreground">查看和管理您的所有合同</p>
+        <Button 
+          onClick={() => {
+            const applyTab = document.querySelector('[data-state="apply"]') as HTMLButtonElement;
+            if (applyTab) applyTab.click();
+          }}
+        >
+          <FilePlus className="mr-2 h-4 w-4" />
+          申请合同
+        </Button>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
@@ -283,7 +280,6 @@ const MyContracts = () => {
         </TabsList>
         
         <TabsContent value="list" className="space-y-6">
-          {/* 统计卡片 */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -335,7 +331,6 @@ const MyContracts = () => {
             </Card>
           </div>
 
-          {/* 统计图表 */}
           <Button 
             variant="ghost" 
             className="flex items-center gap-2 mb-2"
