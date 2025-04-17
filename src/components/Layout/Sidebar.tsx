@@ -83,12 +83,6 @@ export function Sidebar() {
               <SidebarItem href="/approvals" icon={FileCheck}>
                 合同审批
               </SidebarItem>
-              <SidebarItem href="/dept-teachers" icon={Users}>
-                教师管理
-              </SidebarItem>
-              <SidebarItem href="/dept-reports" icon={FileBarChart}>
-                部门统计
-              </SidebarItem>
             </>
           )}
 

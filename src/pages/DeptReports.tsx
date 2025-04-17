@@ -1,12 +1,15 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useContracts } from "@/contexts/ContractContext";
+import { useUsers } from "@/contexts/UserContext";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Select,
@@ -16,6 +19,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   BarChart,
   Bar,
@@ -29,7 +51,16 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Download, RefreshCw } from "lucide-react";
+import { 
+  Download, 
+  RefreshCw, 
+  Filter, 
+  Search, 
+  Plus, 
+  FileText,
+  ArrowDownUp,
+  Eye,
+} from "lucide-react";
 
 // Mock data for department charts
 const deptContractsByTypeData = [
@@ -70,8 +101,13 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"
 
 const DeptReports = () => {
   const { user } = useAuth();
+  const { contracts, loading: contractsLoading } = useContracts();
+  const { users, loading: usersLoading } = useUsers();
   const [timeRange, setTimeRange] = useState("year");
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   const refreshData = () => {
     setIsLoading(true);
@@ -86,10 +122,31 @@ const DeptReports = () => {
     alert(`下载${reportType}报告`);
   };
 
+  // Filter contracts based on department
+  const departmentContracts = contracts.filter(
+    contract => user?.departmentId && contract.departmentId === user.departmentId
+  );
+
+  // Further filter by search term and status
+  const filteredContracts = departmentContracts.filter(contract => {
+    const matchesSearch = 
+      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (contract.teacherName && contract.teacherName.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesStatus = 
+      statusFilter === "all" || 
+      contract.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const loading = contractsLoading || usersLoading || isLoading;
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">部门合同统计</h1>
+        <h1 className="text-3xl font-bold">部门合同管理</h1>
         <div className="flex space-x-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[150px]">
@@ -114,6 +171,7 @@ const DeptReports = () => {
         </div>
       </div>
 
+      {/* Statistics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Contract by Type */}
         <Card>
@@ -190,6 +248,192 @@ const DeptReports = () => {
         </Card>
       </div>
 
+      {/* Contracts List Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>部门合同列表</CardTitle>
+              <CardDescription>管理部门内所有合同</CardDescription>
+            </div>
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  新建合同
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[525px]">
+                <DialogHeader>
+                  <DialogTitle>创建新合同</DialogTitle>
+                  <DialogDescription>
+                    为部门教师创建新的合同
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Select>
+                      <SelectTrigger className="col-span-4">
+                        <SelectValue placeholder="选择教师" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users
+                          .filter(u => u.departmentId === user?.departmentId)
+                          .map((teacher) => (
+                            <SelectItem key={teacher.id} value={teacher.id}>
+                              {teacher.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Select>
+                      <SelectTrigger className="col-span-4">
+                        <SelectValue placeholder="选择合同类型" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="teaching">教学型</SelectItem>
+                        <SelectItem value="research">科研型</SelectItem>
+                        <SelectItem value="both">教学科研型</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input
+                      className="col-span-4"
+                      type="date"
+                      placeholder="开始日期"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input
+                      className="col-span-4"
+                      type="date"
+                      placeholder="结束日期"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                    取消
+                  </Button>
+                  <Button>创建合同</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <div className="flex items-center space-x-2 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="搜索合同..."
+                className="pl-8 w-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="状态" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="active">有效</SelectItem>
+                <SelectItem value="pending">审批中</SelectItem>
+                <SelectItem value="expired">已到期</SelectItem>
+                <SelectItem value="terminated">已终止</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon">
+              <ArrowDownUp className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>合同编号</TableHead>
+                  <TableHead>教师</TableHead>
+                  <TableHead>合同类型</TableHead>
+                  <TableHead>开始日期</TableHead>
+                  <TableHead>结束日期</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredContracts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4">
+                      未找到合同数据
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredContracts.map((contract) => (
+                    <TableRow key={contract.id}>
+                      <TableCell className="font-medium">{contract.id}</TableCell>
+                      <TableCell>{contract.teacherName}</TableCell>
+                      <TableCell>{contract.type}</TableCell>
+                      <TableCell>{contract.startDate}</TableCell>
+                      <TableCell>{contract.endDate}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            contract.status === "active"
+                              ? "default"
+                              : contract.status === "pending"
+                              ? "outline"
+                              : contract.status === "expired"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
+                          {contract.status === "active"
+                            ? "有效"
+                            : contract.status === "pending"
+                            ? "审批中"
+                            : contract.status === "expired"
+                            ? "已到期"
+                            : "已终止"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={`/approvals/${contract.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="text-sm text-muted-foreground">
+            共 {filteredContracts.length} 条记录
+          </div>
+          {/* Pagination would go here */}
+        </CardFooter>
+      </Card>
+
       {/* Monthly Contract Trends */}
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -221,42 +465,6 @@ const DeptReports = () => {
                 <Bar dataKey="新签" fill="#8884d8" />
                 <Bar dataKey="续签" fill="#82ca9d" />
                 <Bar dataKey="终止" fill="#ff8042" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Position Distribution */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle>职称分布</CardTitle>
-            <CardDescription>按职称统计合同数量</CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => downloadReport("职称分布")}>
-            <Download className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={deptContractsByPositionData}
-                layout="vertical"
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 60,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>
           </div>

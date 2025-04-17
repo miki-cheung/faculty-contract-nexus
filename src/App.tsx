@@ -24,7 +24,6 @@ import ContractDetail from "./pages/ContractDetail";
 import Notifications from "./pages/Notifications";
 import Templates from "./pages/Templates";
 import DeptReports from "./pages/DeptReports";
-import DeptTeachers from "./pages/DeptTeachers";
 import Approvals from "./pages/Approvals";
 import Users from "./pages/Users";
 import Settings from "./pages/Settings";
@@ -55,11 +54,9 @@ const App = () => (
                     <Route path="my-contracts/:id" element={<ContractDetail />} />
                     
                     {/* 部门管理员路由 */}
-                    <Route path="dept-contracts" element={<MyContracts />} />
+                    <Route path="dept-contracts" element={<DeptReports />} />
                     <Route path="approvals" element={<Approvals />} />
                     <Route path="approvals/:id" element={<ContractDetail />} />
-                    <Route path="dept-teachers" element={<DeptTeachers />} />
-                    <Route path="dept-reports" element={<DeptReports />} />
                     
                     {/* 人事管理员路由 */}
                     <Route path="contracts" element={<MyContracts />} />
