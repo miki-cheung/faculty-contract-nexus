@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContracts } from "@/contexts/ContractContext";
 import { useUsers } from "@/contexts/UserContext";
@@ -61,6 +61,7 @@ import {
   ArrowDownUp,
   Eye,
 } from "lucide-react";
+import { ContractStatus, ContractType, UserRole } from "@/types";
 
 // Mock data for department charts
 const deptContractsByTypeData = [
@@ -122,24 +123,47 @@ const DeptReports = () => {
     alert(`下载${reportType}报告`);
   };
 
-  // Filter contracts based on department
-  const departmentContracts = contracts.filter(
-    contract => user?.departmentId && contract.departmentId === user.departmentId
-  );
+  // Get teachers in the department
+  const departmentTeachers = useMemo(() => {
+    return users.filter(u => u.departmentId === user?.departmentId && u.role === UserRole.TEACHER);
+  }, [users, user]);
+
+  // Get department teacher IDs
+  const departmentTeacherIds = useMemo(() => {
+    return departmentTeachers.map(teacher => teacher.id);
+  }, [departmentTeachers]);
+
+  // Filter contracts based on department teachers
+  const departmentContracts = useMemo(() => {
+    return contracts.filter(contract => departmentTeacherIds.includes(contract.teacherId));
+  }, [contracts, departmentTeacherIds]);
+
+  // Get teacher name from user data
+  const getTeacherName = (teacherId: string) => {
+    const teacher = users.find(u => u.id === teacherId);
+    return teacher ? teacher.name : "未知教师";
+  };
 
   // Further filter by search term and status
-  const filteredContracts = departmentContracts.filter(contract => {
-    const matchesSearch = 
-      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (contract.teacherName && contract.teacherName.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = 
-      statusFilter === "all" || 
-      contract.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredContracts = useMemo(() => {
+    return departmentContracts.filter(contract => {
+      const teacherName = getTeacherName(contract.teacherId);
+      
+      const matchesSearch = 
+        contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacherName.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = 
+        statusFilter === "all" || 
+        (statusFilter === "active" && contract.status === ContractStatus.APPROVED) ||
+        (statusFilter === "pending" && (contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR)) ||
+        (statusFilter === "expired" && contract.status === ContractStatus.EXPIRED) ||
+        (statusFilter === "terminated" && contract.status === ContractStatus.TERMINATED);
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [departmentContracts, searchTerm, statusFilter, users]);
 
   const loading = contractsLoading || usersLoading || isLoading;
 
@@ -277,13 +301,11 @@ const DeptReports = () => {
                         <SelectValue placeholder="选择教师" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users
-                          .filter(u => u.departmentId === user?.departmentId)
-                          .map((teacher) => (
-                            <SelectItem key={teacher.id} value={teacher.id}>
-                              {teacher.name}
-                            </SelectItem>
-                          ))}
+                        {departmentTeachers.map((teacher) => (
+                          <SelectItem key={teacher.id} value={teacher.id}>
+                            {teacher.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -382,27 +404,27 @@ const DeptReports = () => {
                   filteredContracts.map((contract) => (
                     <TableRow key={contract.id}>
                       <TableCell className="font-medium">{contract.id}</TableCell>
-                      <TableCell>{contract.teacherName}</TableCell>
+                      <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                       <TableCell>{contract.type}</TableCell>
                       <TableCell>{contract.startDate}</TableCell>
                       <TableCell>{contract.endDate}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            contract.status === "active"
+                            contract.status === ContractStatus.APPROVED
                               ? "default"
-                              : contract.status === "pending"
+                              : contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR
                               ? "outline"
-                              : contract.status === "expired"
+                              : contract.status === ContractStatus.EXPIRED
                               ? "secondary"
                               : "destructive"
                           }
                         >
-                          {contract.status === "active"
+                          {contract.status === ContractStatus.APPROVED
                             ? "有效"
-                            : contract.status === "pending"
+                            : contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR
                             ? "审批中"
-                            : contract.status === "expired"
+                            : contract.status === ContractStatus.EXPIRED
                             ? "已到期"
                             : "已终止"}
                         </Badge>
