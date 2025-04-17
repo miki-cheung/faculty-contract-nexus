@@ -209,6 +209,9 @@ const MyContracts = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" title="查看流程">
+      查看流程
+    </Button>
                         <Button size="icon" variant="ghost" title="查看详情">
                           <Link to={`/my-contracts/${contract.id}`}>
                             <Eye className="h-4 w-4" />
