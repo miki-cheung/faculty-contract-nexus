@@ -25,11 +25,9 @@ import Notifications from "./pages/Notifications";
 import Templates from "./pages/Templates";
 import DeptReports from "./pages/DeptReports";
 import Approvals from "./pages/Approvals";
-import Users from "./pages/Users";
-import Settings from "./pages/Settings";
-import Expiry from "./pages/Expiry";
 import NotFound from "./pages/NotFound";
 import Reports from "./pages/Reports";
+import Expiry from "./pages/Expiry";
 
 const queryClient = new QueryClient();
 
@@ -63,10 +61,8 @@ const App = () => (
                     <Route path="templates" element={<Templates />} />
                     <Route path="hr-approvals" element={<Approvals />} />
                     <Route path="hr-approvals/:id" element={<ContractDetail />} />
-                    <Route path="users" element={<Users />} />
                     <Route path="reports" element={<Reports />} />
                     <Route path="expiry" element={<Expiry />} />
-                    <Route path="settings" element={<Settings />} />
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />

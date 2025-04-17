@@ -6,14 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types";
 import { 
   FileText, 
-  Users, 
   FilePlus, 
-  Settings, 
   FileCheck, 
   Bell, 
   LogOut, 
-  Home,
-  UserCircle,
   Clock,
   FileBarChart
 } from "lucide-react";
@@ -97,17 +93,11 @@ export function Sidebar() {
               <SidebarItem href="/hr-approvals" icon={FileCheck}>
                 合同审批
               </SidebarItem>
-              <SidebarItem href="/users" icon={Users}>
-                用户管理
-              </SidebarItem>
               <SidebarItem href="/reports" icon={FileBarChart}>
                 报表统计
               </SidebarItem>
               <SidebarItem href="/expiry" icon={Clock}>
                 到期管理
-              </SidebarItem>
-              <SidebarItem href="/settings" icon={Settings}>
-                系统设置
               </SidebarItem>
             </>
           )}
