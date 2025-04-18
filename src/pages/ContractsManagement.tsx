@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useContracts } from "@/contexts/ContractContext";
 import { useUsers } from "@/contexts/UserContext";
@@ -12,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ContractStatus } from "@/types";
+import { ContractStatus, ContractType } from "@/types";
 import { Link, useLocation } from "react-router-dom";
 import { AlertCircle, FileText, Download } from "lucide-react";
 import {
@@ -61,11 +60,12 @@ const ContractsManagement = () => {
     return diffDays <= 30 && diffDays > 0;
   });
 
-  // 统计数据
+  // 统计数据 - 使用正确的 ContractType 枚举值
   const contractsByType = [
-    { name: "教学型", value: contracts.filter(c => c.type === "teaching").length },
-    { name: "科研型", value: contracts.filter(c => c.type === "research").length },
-    { name: "教学科研型", value: contracts.filter(c => c.type === "both").length },
+    { name: "全职", value: contracts.filter(c => c.type === ContractType.FULL_TIME).length },
+    { name: "兼职", value: contracts.filter(c => c.type === ContractType.PART_TIME).length },
+    { name: "临时", value: contracts.filter(c => c.type === ContractType.TEMPORARY).length },
+    { name: "访问", value: contracts.filter(c => c.type === ContractType.VISITING).length },
   ];
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];

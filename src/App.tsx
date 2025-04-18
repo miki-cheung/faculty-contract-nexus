@@ -1,3 +1,4 @@
+
 import {
   QueryClient,
   QueryClientProvider
@@ -62,6 +63,8 @@ const App = () => (
                     <Route path="hr-approvals" element={<Approvals />} />
                     <Route path="hr-approvals/:id" element={<ContractDetail />} />
                     <Route path="expiry" element={<Expiry />} />
+                    {/* 修复 reports 路由 - 重定向到合同管理页面 */}
+                    <Route path="reports" element={<Navigate to="/contracts" replace />} />
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />
