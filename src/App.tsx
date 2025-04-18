@@ -25,7 +25,6 @@ import Templates from "./pages/Templates";
 import DeptReports from "./pages/DeptReports";
 import Approvals from "./pages/Approvals";
 import NotFound from "./pages/NotFound";
-import Reports from "./pages/Reports";
 import Expiry from "./pages/Expiry";
 import ContractsManagement from "./pages/ContractsManagement";
 
@@ -58,10 +57,10 @@ const App = () => (
                     
                     {/* 人事管理员路由 */}
                     <Route path="contracts" element={<ContractsManagement />} />
+                    <Route path="contract-list" element={<ContractsManagement />} />
                     <Route path="templates" element={<Templates />} />
                     <Route path="hr-approvals" element={<Approvals />} />
                     <Route path="hr-approvals/:id" element={<ContractDetail />} />
-                    <Route path="reports" element={<Reports />} />
                     <Route path="expiry" element={<Expiry />} />
                   </Route>
                   
