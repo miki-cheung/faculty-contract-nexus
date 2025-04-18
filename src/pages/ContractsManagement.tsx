@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useContracts } from "@/contexts/ContractContext";
+import { useUsers } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -17,6 +18,13 @@ import { AlertCircle, FileText } from "lucide-react";
 
 const ContractsManagement = () => {
   const { contracts, loading } = useContracts();
+  const { users, loading: usersLoading } = useUsers();
+
+  // Get teacher name by ID
+  const getTeacherName = (teacherId: string) => {
+    const teacher = users.find(user => user.id === teacherId);
+    return teacher ? teacher.name : "未知教师";
+  };
 
   // 获取即将到期的合同（30天内）
   const expiringContracts = contracts.filter(contract => {
@@ -51,7 +59,7 @@ const ContractsManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading || usersLoading ? (
             <div className="text-center py-4">加载中...</div>
           ) : expiringContracts.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -79,7 +87,7 @@ const ContractsManagement = () => {
                   return (
                     <TableRow key={contract.id}>
                       <TableCell>{contract.title}</TableCell>
-                      <TableCell>{contract.teacherName}</TableCell>
+                      <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                       <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
                       <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
                       <TableCell>
@@ -109,7 +117,7 @@ const ContractsManagement = () => {
           <CardDescription>显示最近更新的10份合同</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading || usersLoading ? (
             <div className="text-center py-4">加载中...</div>
           ) : (
             <Table>
@@ -129,7 +137,7 @@ const ContractsManagement = () => {
                   .map(contract => (
                     <TableRow key={contract.id}>
                       <TableCell>{contract.title}</TableCell>
-                      <TableCell>{contract.teacherName}</TableCell>
+                      <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
