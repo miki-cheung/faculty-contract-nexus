@@ -69,6 +69,9 @@ const ContractsManagement = () => {
         status: ContractStatus.APPROVED,
         updatedAt: new Date().toISOString(),
         type: ContractType.FULL_TIME,
+        templateId: 't1',
+        createdAt: new Date().toISOString(),
+        data: { position: "教授", salary: 300000 }
       },
       {
         id: 'mock2',
@@ -79,6 +82,9 @@ const ContractsManagement = () => {
         status: ContractStatus.APPROVED,
         updatedAt: new Date().toISOString(),
         type: ContractType.PART_TIME,
+        templateId: 't2',
+        createdAt: new Date().toISOString(),
+        data: { position: "兼职教授", hourly_rate: 800 }
       },
     ];
   }
