@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -9,8 +8,7 @@ import {
   FilePlus, 
   FileCheck, 
   Bell, 
-  LogOut, 
-  Clock,
+  LogOut,
   FileBarChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,9 +93,6 @@ export function Sidebar() {
               </SidebarItem>
               <SidebarItem href="/reports" icon={FileBarChart}>
                 报表统计
-              </SidebarItem>
-              <SidebarItem href="/expiry" icon={Clock}>
-                到期管理
               </SidebarItem>
             </>
           )}
