@@ -91,7 +91,7 @@ export function Sidebar() {
               <SidebarItem href="/hr-approvals" icon={FileCheck}>
                 合同审批
               </SidebarItem>
-              {/* 删除报表统计入口 */}
+              {/* 报表统计入口已移除 */}
             </>
           )}
         </div>

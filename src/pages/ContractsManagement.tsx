@@ -40,12 +40,7 @@ const ContractsManagement = () => {
   const { users, loading: usersLoading } = useUsers();
   const location = useLocation();
   const [timeRange, setTimeRange] = useState("year");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-
+  
   // Determine if we're in the contract list view
   const isContractList = location.pathname === "/contract-list";
 
@@ -65,19 +60,6 @@ const ContractsManagement = () => {
     return diffDays <= 30 && diffDays > 0;
   });
 
-  // 搜索+筛选后的合同
-  const filteredContracts = contracts.filter(contract => {
-    const matchTitle = contract.title.includes(searchTerm);
-    const matchStatus = statusFilter === "all" || contract.status === statusFilter;
-    const matchType = typeFilter === "all" || contract.type === typeFilter;
-    return matchTitle && matchStatus && matchType;
-  });
-
-  // 分页
-  const totalContracts = filteredContracts.length;
-  const totalPages = Math.ceil(totalContracts / pageSize);
-  const paginatedContracts = filteredContracts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
   // 统计数据 - 使用正确的 ContractType 枚举值
   const contractsByType = [
     { name: "全职", value: contracts.filter(c => c.type === ContractType.FULL_TIME).length },
@@ -88,6 +70,40 @@ const ContractsManagement = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
+  // 合同列表分页、搜索、筛选、过滤功能
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  // 搜索+筛选后的合同
+  const filteredContracts = contracts.filter(contract => {
+    const matchTitle = contract.title.includes(searchTerm);
+    const matchStatus = statusFilter === "all" || contract.status === statusFilter;
+    const matchType = typeFilter === "all" || contract.type === typeFilter;
+    return matchTitle && matchStatus && matchType;
+  });
+  // 分页
+  const totalContracts = filteredContracts.length;
+  const totalPages = Math.ceil(totalContracts / pageSize);
+  const paginatedContracts = filteredContracts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // 统计图表数据处理
+  // 合同状态分布
+  const statusPieData = [
+    { name: "已批准", value: contracts.filter(c => c.status === ContractStatus.APPROVED).length },
+    { name: "即将到期", value: expiringContracts.length },
+    { name: "已到期", value: contracts.filter(c => c.status === ContractStatus.EXPIRED).length },
+    { name: "草稿", value: contracts.filter(c => c.status === ContractStatus.DRAFT).length },
+    { name: "已终止", value: contracts.filter(c => c.status === ContractStatus.TERMINATED).length },
+  ];
+
+  // 月度合同趋势
+  const monthlyStats = getMonthlyStats(contracts);
+  // 部门合同分布
+  const deptStats = getDeptStats(contracts, users);
+
   if (isContractList) {
     return (
       <div className="container mx-auto py-6">
@@ -95,7 +111,6 @@ const ContractsManagement = () => {
           <h2 className="text-3xl font-bold tracking-tight">全校合同列表</h2>
           <Button variant="outline" onClick={() => window.history.back()}>返回</Button>
         </div>
-
         {/* 搜索、筛选、过滤控件 */}
         <div className="flex gap-2 mb-4">
           <input
@@ -124,7 +139,6 @@ const ContractsManagement = () => {
             <option value="VISITING">访问</option>
           </select>
         </div>
-
         <Card>
           <CardContent className="p-6">
             {loading || usersLoading ? (
@@ -213,15 +227,30 @@ const ContractsManagement = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* 顶部：合同管理标题和操作栏，始终显示在最上方 */}
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">合同管理</h2>
         <div className="flex gap-2">
-          {/* 这里可添加导出、批量操作等按钮 */}
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="选择时间范围" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">本月</SelectItem>
+              <SelectItem value="quarter">本季度</SelectItem>
+              <SelectItem value="year">本年度</SelectItem>
+              <SelectItem value="all">全部</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button asChild>
+            <Link to="/contract-list">
+              <FileText className="w-4 h-4 mr-2" />
+              查看所有合同
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* 统计图表区域：如无数据则显示提示 */}
+      {/* 统计图表区域：三栏布局 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* 合同状态分布饼图 */}
         <Card>
@@ -239,11 +268,7 @@ const ContractsManagement = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={[
-                        { name: "有效", value: contracts.filter(c => c.status === ContractStatus.APPROVED).length },
-                        { name: "即将到期", value: expiringContracts.length },
-                        { name: "已到期", value: contracts.filter(c => c.status === ContractStatus.EXPIRED).length }
-                      ]}
+                      data={statusPieData}
                       cx="50%"
                       cy="50%"
                       labelLine={true}
@@ -274,13 +299,12 @@ const ContractsManagement = () => {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center">
-              {/* 示例数据，实际可替换为后端数据 */}
               {contracts.length === 0 ? (
                 <span className="text-muted-foreground">暂无数据</span>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={getMonthlyStats(contracts)}
+                    data={monthlyStats}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -312,7 +336,7 @@ const ContractsManagement = () => {
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={getDeptStats(contracts, users)}
+                    data={deptStats}
                     layout="vertical"
                     margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
                   >
@@ -330,49 +354,70 @@ const ContractsManagement = () => {
         </Card>
       </div>
 
-      {/* 即将到期的合同卡片 */}
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-yellow-500" />
-              即将到期的合同
-            </CardTitle>
-            <CardDescription>30天内即将到期的合同</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {expiringContracts.length === 0 ? (
-            <div className="text-muted-foreground">暂无即将到期的合同</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>合同标题</TableHead>
-                  <TableHead>教师姓名</TableHead>
-                  <TableHead>结束日期</TableHead>
-                  <TableHead>状态</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expiringContracts.map(contract => (
-                  <TableRow key={contract.id}>
-                    <TableCell>{contract.title}</TableCell>
-                    <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
-                    <TableCell>{contract.endDate}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">即将到期</span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 合同列表与分页...（原有内容） */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                即将到期的合同
+              </CardTitle>
+              <CardDescription>显示30天内即将到期的合同</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading || usersLoading ? (
+              <div className="text-center py-4">加载中...</div>
+            ) : expiringContracts.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                暂无即将到期的合同
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>合同标题</TableHead>
+                    <TableHead>教师姓名</TableHead>
+                    <TableHead>开始日期</TableHead>
+                    <TableHead>到期日期</TableHead>
+                    <TableHead>剩余天数</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {expiringContracts.map(contract => {
+                    const endDate = new Date(contract.endDate);
+                    const now = new Date();
+                    const diffTime = endDate.getTime() - now.getTime();
+                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    return (
+                      <TableRow key={contract.id}>
+                        <TableCell>{contract.title}</TableCell>
+                        <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
+                        <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <span className="text-yellow-500 font-medium">
+                            {daysLeft}天
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/contracts/${contract.id}`}>
+                              查看详情
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
@@ -451,7 +496,17 @@ const ContractsManagement = () => {
                             ? "已批准"
                             : contract.status === ContractStatus.REJECTED
                             ? "已拒绝"
-                            : "审批中"}
+                            : contract.status === ContractStatus.PENDING_DEPT
+                            ? "待部门审批"
+                            : contract.status === ContractStatus.PENDING_HR
+                            ? "待人事审批"
+                            : contract.status === ContractStatus.DRAFT
+                            ? "草稿"
+                            : contract.status === ContractStatus.EXPIRED
+                            ? "已到期"
+                            : contract.status === ContractStatus.TERMINATED
+                            ? "已终止"
+                            : contract.status}
                         </span>
                       </TableCell>
                       <TableCell>{new Date(contract.updatedAt).toLocaleDateString()}</TableCell>
@@ -473,7 +528,6 @@ const ContractsManagement = () => {
   );
 };
 
-// 工具函数：生成月度统计数据
 function getMonthlyStats(contracts) {
   // 生成最近12个月的月份标签
   const now = new Date();
