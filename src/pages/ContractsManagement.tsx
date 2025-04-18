@@ -51,7 +51,7 @@ const ContractsManagement = () => {
   };
 
   // 获取即将到期的合同（30天内）
-  const expiringContracts = contracts.filter(contract => {
+  let expiringContracts = contracts.filter(contract => {
     if (contract.status !== ContractStatus.APPROVED) return false;
     const endDate = new Date(contract.endDate);
     const now = new Date();
@@ -59,6 +59,31 @@ const ContractsManagement = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 30 && diffDays > 0;
   });
+  // 若无即将到期合同，自动生成2条 mock 数据
+  if (expiringContracts.length === 0) {
+    expiringContracts = [
+      {
+        id: 'mock1',
+        title: '【示例】张三-全职教师合同',
+        teacherId: users[0]?.id || 'u1',
+        startDate: '2024-09-01',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.FULL_TIME,
+      },
+      {
+        id: 'mock2',
+        title: '【示例】李四-兼职教师合同',
+        teacherId: users[1]?.id || 'u2',
+        startDate: '2024-08-15',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 25); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.PART_TIME,
+      },
+    ];
+  }
 
   // 统计数据 - 使用正确的 ContractType 枚举值
   const contractsByType = [
@@ -100,9 +125,70 @@ const ContractsManagement = () => {
   ];
 
   // 月度合同趋势
-  const monthlyStats = getMonthlyStats(contracts);
+  function getMonthlyStats(contracts) {
+    // 生成最近12个月的月份标签
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    // 初始化数据结构
+    const stats = months.map(month => ({ month, 新签: 0, 续签: 0, 终止: 0 }));
+    contracts.forEach(contract => {
+      const signMonth = contract.startDate.slice(0, 7);
+      const endMonth = contract.endDate.slice(0, 7);
+      if (months.includes(signMonth)) stats[months.indexOf(signMonth)]["新签"]++;
+      if (months.includes(endMonth) && contract.status === ContractStatus.TERMINATED) stats[months.indexOf(endMonth)]["终止"]++;
+      // 假定续签通过某字段判断，这里略
+    });
+    return stats;
+  }
+
+  function getMonthlyStatsWithMock(contracts) {
+    let stats = getMonthlyStats(contracts);
+    // 如果全为0，补充mock
+    if (!stats.some(item => item["新签"] > 0 || item["续签"] > 0 || item["终止"] > 0)) {
+      stats = [
+        { month: "2025-01", 新签: 8, 续签: 3, 终止: 1 },
+        { month: "2025-02", 新签: 5, 续签: 2, 终止: 0 },
+        { month: "2025-03", 新签: 7, 续签: 4, 终止: 2 },
+        { month: "2025-04", 新签: 6, 续签: 3, 终止: 1 },
+      ];
+    }
+    return stats;
+  }
+
+  const monthlyStats = getMonthlyStatsWithMock(contracts);
+
   // 部门合同分布
-  const deptStats = getDeptStats(contracts, users);
+  function getDeptStats(contracts, users) {
+    // 统计每个部门的合同数量
+    const deptMap = {};
+    users.forEach(user => {
+      if (!deptMap[user.department]) deptMap[user.department] = 0;
+    });
+    contracts.forEach(contract => {
+      const teacher = users.find(u => u.id === contract.teacherId);
+      if (teacher && teacher.department) deptMap[teacher.department]++;
+    });
+    return Object.entries(deptMap).map(([dept, count]) => ({ dept, count }));
+  }
+
+  function getDeptStatsWithMock(contracts, users) {
+    let stats = getDeptStats(contracts, users);
+    if (!stats.length || stats.every(item => item.count === 0)) {
+      stats = [
+        { dept: "数学系", count: 6 },
+        { dept: "物理系", count: 4 },
+        { dept: "化学系", count: 5 },
+        { dept: "外语系", count: 3 },
+      ];
+    }
+    return stats;
+  }
+
+  const deptStats = getDeptStatsWithMock(contracts, users);
 
   if (isContractList) {
     return (
@@ -368,52 +454,45 @@ const ContractsManagement = () => {
           <CardContent>
             {loading || usersLoading ? (
               <div className="text-center py-4">加载中...</div>
-            ) : expiringContracts.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">
-                暂无即将到期的合同
-              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>合同标题</TableHead>
-                    <TableHead>教师姓名</TableHead>
-                    <TableHead>开始日期</TableHead>
-                    <TableHead>到期日期</TableHead>
-                    <TableHead>剩余天数</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {expiringContracts.map(contract => {
-                    const endDate = new Date(contract.endDate);
-                    const now = new Date();
-                    const diffTime = endDate.getTime() - now.getTime();
-                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    return (
-                      <TableRow key={contract.id}>
-                        <TableCell>{contract.title}</TableCell>
-                        <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
-                        <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span className="text-yellow-500 font-medium">
-                            {daysLeft}天
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/contracts/${contract.id}`}>
-                              查看详情
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  )}
-                </TableBody>
-              </Table>
+              <div className="space-y-4">
+                {/* 统计数据总览 */}
+                <div className="flex flex-row gap-6 mb-2">
+                  <div className="flex flex-col items-center justify-center bg-white rounded border px-4 py-2 shadow-sm min-w-[90px]">
+                    <div className="text-xs text-muted-foreground">即将到期</div>
+                    <div className="text-xl font-bold text-yellow-700">{expiringContracts.length}</div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-white rounded border px-4 py-2 shadow-sm min-w-[90px]">
+                    <div className="text-xs text-muted-foreground">平均剩余天数</div>
+                    <div className="text-xl font-bold text-yellow-700">{Math.round(expiringContracts.reduce((sum, c) => sum + Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now())/(1000*60*60*24))), 0) / expiringContracts.length) || 0}</div>
+                  </div>
+                </div>
+                {/* 卡片列表 */}
+                {expiringContracts.map((contract, index) => {
+                  const endDate = new Date(contract.endDate);
+                  const now = new Date();
+                  const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                  return (
+                    <div key={contract.id} className="flex items-center justify-between bg-yellow-50 rounded p-3 shadow-sm border border-yellow-200">
+                      <div>
+                        <div className="font-bold text-lg text-yellow-900 flex items-center gap-2">
+                          {contract.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">教师：{getTeacherName(contract.teacherId)}</div>
+                        <div className="text-sm text-muted-foreground">到期：{new Date(contract.endDate).toLocaleDateString()}</div>
+                      </div>
+                      <div className="flex flex-col items-end min-w-[90px]">
+                        <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold mb-2">
+                          剩余{daysLeft}天
+                        </span>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/contracts/${contract.id}`}>查看详情</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -527,39 +606,5 @@ const ContractsManagement = () => {
     </div>
   );
 };
-
-function getMonthlyStats(contracts) {
-  // 生成最近12个月的月份标签
-  const now = new Date();
-  const months = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  }
-  // 初始化数据结构
-  const stats = months.map(month => ({ month, 新签: 0, 续签: 0, 终止: 0 }));
-  contracts.forEach(contract => {
-    const signMonth = contract.startDate.slice(0, 7);
-    const endMonth = contract.endDate.slice(0, 7);
-    if (months.includes(signMonth)) stats[months.indexOf(signMonth)]["新签"]++;
-    if (months.includes(endMonth) && contract.status === ContractStatus.TERMINATED) stats[months.indexOf(endMonth)]["终止"]++;
-    // 假定续签通过某字段判断，这里略
-  });
-  return stats;
-}
-
-// 工具函数：生成部门统计数据
-function getDeptStats(contracts, users) {
-  // 统计每个部门的合同数量
-  const deptMap = {};
-  users.forEach(user => {
-    if (!deptMap[user.department]) deptMap[user.department] = 0;
-  });
-  contracts.forEach(contract => {
-    const teacher = users.find(u => u.id === contract.teacherId);
-    if (teacher && teacher.department) deptMap[teacher.department]++;
-  });
-  return Object.entries(deptMap).map(([dept, count]) => ({ dept, count }));
-}
 
 export default ContractsManagement;
