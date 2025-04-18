@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContractStatus, ContractType } from "@/types";
 import { Link, useLocation } from "react-router-dom";
-import { AlertCircle, FileText, Download } from "lucide-react";
+import { AlertCircle, FileText, Download, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   BarChart,
   Bar,
@@ -41,16 +42,13 @@ const ContractsManagement = () => {
   const location = useLocation();
   const [timeRange, setTimeRange] = useState("year");
   
-  // Determine if we're in the contract list view
   const isContractList = location.pathname === "/contract-list";
 
-  // Get teacher name by ID
   const getTeacherName = (teacherId: string) => {
     const teacher = users.find(user => user.id === teacherId);
     return teacher ? teacher.name : "未知教师";
   };
 
-  // 获取即将到期的合同（30天内）
   let expiringContracts = contracts.filter(contract => {
     if (contract.status !== ContractStatus.APPROVED) return false;
     const endDate = new Date(contract.endDate);
@@ -59,7 +57,7 @@ const ContractsManagement = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 30 && diffDays > 0;
   });
-  // 若无即将到期合同，自动生成2条 mock 数据
+
   if (expiringContracts.length === 0) {
     expiringContracts = [
       {
@@ -85,7 +83,6 @@ const ContractsManagement = () => {
     ];
   }
 
-  // 统计数据 - 使用正确的 ContractType 枚举值
   const contractsByType = [
     { name: "全职", value: contracts.filter(c => c.type === ContractType.FULL_TIME).length },
     { name: "兼职", value: contracts.filter(c => c.type === ContractType.PART_TIME).length },
@@ -95,27 +92,23 @@ const ContractsManagement = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
-  // 合同列表分页、搜索、筛选、过滤功能
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  // 搜索+筛选后的合同
   const filteredContracts = contracts.filter(contract => {
     const matchTitle = contract.title.includes(searchTerm);
     const matchStatus = statusFilter === "all" || contract.status === statusFilter;
     const matchType = typeFilter === "all" || contract.type === typeFilter;
     return matchTitle && matchStatus && matchType;
   });
-  // 分页
+
   const totalContracts = filteredContracts.length;
   const totalPages = Math.ceil(totalContracts / pageSize);
   const paginatedContracts = filteredContracts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // 统计图表数据处理
-  // 合同状态分布
   const statusPieData = [
     { name: "已批准", value: contracts.filter(c => c.status === ContractStatus.APPROVED).length },
     { name: "即将到期", value: expiringContracts.length },
@@ -124,30 +117,25 @@ const ContractsManagement = () => {
     { name: "已终止", value: contracts.filter(c => c.status === ContractStatus.TERMINATED).length },
   ];
 
-  // 月度合同趋势
   function getMonthlyStats(contracts) {
-    // 生成最近12个月的月份标签
     const now = new Date();
     const months = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     }
-    // 初始化数据结构
     const stats = months.map(month => ({ month, 新签: 0, 续签: 0, 终止: 0 }));
     contracts.forEach(contract => {
       const signMonth = contract.startDate.slice(0, 7);
       const endMonth = contract.endDate.slice(0, 7);
       if (months.includes(signMonth)) stats[months.indexOf(signMonth)]["新签"]++;
       if (months.includes(endMonth) && contract.status === ContractStatus.TERMINATED) stats[months.indexOf(endMonth)]["终止"]++;
-      // 假定续签通过某字段判断，这里略
     });
     return stats;
   }
 
   function getMonthlyStatsWithMock(contracts) {
     let stats = getMonthlyStats(contracts);
-    // 如果全为0，补充mock
     if (!stats.some(item => item["新签"] > 0 || item["续签"] > 0 || item["终止"] > 0)) {
       stats = [
         { month: "2025-01", 新签: 8, 续签: 3, 终止: 1 },
@@ -161,9 +149,7 @@ const ContractsManagement = () => {
 
   const monthlyStats = getMonthlyStatsWithMock(contracts);
 
-  // 部门合同分布
   function getDeptStats(contracts, users) {
-    // 统计每个部门的合同数量
     const deptMap = {};
     users.forEach(user => {
       if (!deptMap[user.department]) deptMap[user.department] = 0;
@@ -197,7 +183,6 @@ const ContractsManagement = () => {
           <h2 className="text-3xl font-bold tracking-tight">全校合同列表</h2>
           <Button variant="outline" onClick={() => window.history.back()}>返回</Button>
         </div>
-        {/* 搜索、筛选、过滤控件 */}
         <div className="flex gap-2 mb-4">
           <input
             type="text"
@@ -289,7 +274,6 @@ const ContractsManagement = () => {
                     ))}
                   </TableBody>
                 </Table>
-                {/* 分页控件 */}
                 <div className="flex justify-between items-center mt-4">
                   <div>共 {totalContracts} 条记录</div>
                   <div className="flex gap-2 items-center">
@@ -312,12 +296,15 @@ const ContractsManagement = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">合同管理</h2>
-        <div className="flex gap-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">合同管理</h2>
+          <p className="text-muted-foreground mt-2">管理和监控所有合同状态</p>
+        </div>
+        <div className="flex gap-4 items-center">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[150px] bg-background">
               <SelectValue placeholder="选择时间范围" />
             </SelectTrigger>
             <SelectContent>
@@ -327,24 +314,63 @@ const ContractsManagement = () => {
               <SelectItem value="all">全部</SelectItem>
             </SelectContent>
           </Select>
-          <Button asChild>
-            <Link to="/contract-list">
-              <FileText className="w-4 h-4 mr-2" />
+          <Button variant="outline" asChild>
+            <Link to="/contract-list" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
               查看所有合同
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* 统计图表区域：三栏布局 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* 合同状态分布饼图 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle>合同状态分布</CardTitle>
-              <CardDescription>按合同状态统计分布情况</CardDescription>
+          <CardContent className="p-6">
+            <div className="flex flex-col space-y-2">
+              <span className="text-muted-foreground text-sm">总合同数</span>
+              <span className="text-3xl font-bold">{contracts.length}</span>
+              <span className="text-xs text-muted-foreground">较上月增长 5%</span>
             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col space-y-2">
+              <span className="text-muted-foreground text-sm">生效中</span>
+              <span className="text-3xl font-bold text-status-approved">
+                {contracts.filter(c => c.status === ContractStatus.APPROVED).length}
+              </span>
+              <span className="text-xs text-muted-foreground">占总数 {Math.round(contracts.filter(c => c.status === ContractStatus.APPROVED).length / contracts.length * 100)}%</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col space-y-2">
+              <span className="text-muted-foreground text-sm">待审批</span>
+              <span className="text-3xl font-bold text-status-pending">
+                {contracts.filter(c => c.status === ContractStatus.PENDING_HR || c.status === ContractStatus.PENDING_DEPT).length}
+              </span>
+              <span className="text-xs text-status-pending">需要您的处理</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col space-y-2">
+              <span className="text-muted-foreground text-sm">即将到期</span>
+              <span className="text-3xl font-bold text-status-expired">{expiringContracts.length}</span>
+              <span className="text-xs text-status-expired">30天内到期</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl">合同状态分布</CardTitle>
+            <CardDescription>按合同状态统计分布情况</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center">
@@ -359,7 +385,7 @@ const ContractsManagement = () => {
                       cy="50%"
                       labelLine={true}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -375,114 +401,77 @@ const ContractsManagement = () => {
             </div>
           </CardContent>
         </Card>
-        {/* 月度合同趋势柱状图 */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle>月度合同趋势</CardTitle>
-              <CardDescription>显示每月合同新签、续签和终止数量</CardDescription>
-            </div>
+
+        <Card className="lg:col-span-2">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl">月度合同趋势</CardTitle>
+            <CardDescription>显示每月合同新签、续签和终止数量</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
-              {contracts.length === 0 ? (
-                <span className="text-muted-foreground">暂无数据</span>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthlyStats}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="新签" fill="#8884d8" />
-                    <Bar dataKey="续签" fill="#82ca9d" />
-                    <Bar dataKey="终止" fill="#ff8042" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        {/* 部门合同分布，仅人事管理员可见 */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle>部门合同分布</CardTitle>
-              <CardDescription>按部门统计合同数量</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
-              {contracts.length === 0 ? (
-                <span className="text-muted-foreground">暂无数据</span>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={deptStats}
-                    layout="vertical"
-                    margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="dept" type="category" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyStats}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="新签" fill="#8884d8" />
+                  <Bar dataKey="续签" fill="#82ca9d" />
+                  <Bar dataKey="终止" fill="#ff8042" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-                即将到期的合同
-              </CardTitle>
-              <CardDescription>显示30天内即将到期的合同</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading || usersLoading ? (
-              <div className="text-center py-4">加载中...</div>
-            ) : (
-              <div className="space-y-4">
-                {/* 统计数据总览 */}
-                <div className="flex flex-row gap-6 mb-2">
-                  <div className="flex flex-col items-center justify-center bg-white rounded border px-4 py-2 shadow-sm min-w-[90px]">
-                    <div className="text-xs text-muted-foreground">即将到期</div>
-                    <div className="text-xl font-bold text-yellow-700">{expiringContracts.length}</div>
-                  </div>
-                  <div className="flex flex-col items-center justify-center bg-white rounded border px-4 py-2 shadow-sm min-w-[90px]">
-                    <div className="text-xs text-muted-foreground">平均剩余天数</div>
-                    <div className="text-xl font-bold text-yellow-700">{Math.round(expiringContracts.reduce((sum, c) => sum + Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now())/(1000*60*60*24))), 0) / expiringContracts.length) || 0}</div>
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            即将到期的合同
+          </CardTitle>
+          <CardDescription>显示30天内即将到期的合同</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading || usersLoading ? (
+            <div className="text-center py-4">加载中...</div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex flex-col items-center justify-center bg-accent/10 rounded-lg px-4 py-3">
+                  <div className="text-xs text-muted-foreground">即将到期</div>
+                  <div className="text-2xl font-bold text-yellow-600">{expiringContracts.length}</div>
+                </div>
+                <div className="flex flex-col items-center justify-center bg-accent/10 rounded-lg px-4 py-3">
+                  <div className="text-xs text-muted-foreground">平均剩余天数</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {Math.round(expiringContracts.reduce((sum, c) => sum + Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now())/(1000*60*60*24))), 0) / expiringContracts.length) || 0}
                   </div>
                 </div>
-                {/* 卡片列表 */}
-                {expiringContracts.map((contract, index) => {
+              </div>
+
+              <div className="space-y-4">
+                {expiringContracts.map((contract) => {
                   const endDate = new Date(contract.endDate);
                   const now = new Date();
                   const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
                   return (
-                    <div key={contract.id} className="flex items-center justify-between bg-yellow-50 rounded p-3 shadow-sm border border-yellow-200">
+                    <div key={contract.id} 
+                      className="flex items-center justify-between bg-card hover:bg-accent/5 transition-colors rounded-lg p-4 border">
                       <div>
-                        <div className="font-bold text-lg text-yellow-900 flex items-center gap-2">
+                        <div className="font-medium text-lg flex items-center gap-2">
                           {contract.title}
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">教师：{getTeacherName(contract.teacherId)}</div>
                         <div className="text-sm text-muted-foreground">到期：{new Date(contract.endDate).toLocaleDateString()}</div>
                       </div>
-                      <div className="flex flex-col items-end min-w-[90px]">
-                        <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold mb-2">
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
                           剩余{daysLeft}天
                         </span>
                         <Button variant="outline" size="sm" asChild>
@@ -493,113 +482,86 @@ const ContractsManagement = () => {
                   );
                 })}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div>
-              <CardTitle>合同类型分布</CardTitle>
-              <CardDescription>按合同类型统计分布情况</CardDescription>
             </div>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={contractsByType}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={true}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {contractsByType.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>最近更新的合同</CardTitle>
-          <CardDescription>显示最近更新的10份合同</CardDescription>
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">最近更新的合同</CardTitle>
+              <CardDescription>显示最近更新的10份合同</CardDescription>
+            </div>
+            <Button variant="outline" size="icon">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading || usersLoading ? (
             <div className="text-center py-4">加载中...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>合同标题</TableHead>
-                  <TableHead>教师姓名</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>更新时间</TableHead>
-                  <TableHead>操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contracts
-                  .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                  .slice(0, 10)
-                  .map(contract => (
-                    <TableRow key={contract.id}>
-                      <TableCell>{contract.title}</TableCell>
-                      <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            contract.status === ContractStatus.APPROVED
-                              ? "bg-status-approved/10 text-status-approved"
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>合同标题</TableHead>
+                    <TableHead>教师姓名</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>更新时间</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contracts
+                    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                    .slice(0, 10)
+                    .map(contract => (
+                      <TableRow key={contract.id}>
+                        <TableCell>{contract.title}</TableCell>
+                        <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              contract.status === ContractStatus.APPROVED
+                                ? "bg-status-approved/10 text-status-approved"
+                                : contract.status === ContractStatus.REJECTED
+                                ? "bg-status-rejected/10 text-status-rejected"
+                                : contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR
+                                ? "bg-status-pending/10 text-status-pending"
+                                : "bg-status-draft/10 text-status-draft"
+                            }`}
+                          >
+                            {contract.status === ContractStatus.APPROVED
+                              ? "已批准"
                               : contract.status === ContractStatus.REJECTED
-                              ? "bg-status-rejected/10 text-status-rejected"
-                              : "bg-status-pending/10 text-status-pending"
-                          }`}
-                        >
-                          {contract.status === ContractStatus.APPROVED
-                            ? "已批准"
-                            : contract.status === ContractStatus.REJECTED
-                            ? "已拒绝"
-                            : contract.status === ContractStatus.PENDING_DEPT
-                            ? "待部门审批"
-                            : contract.status === ContractStatus.PENDING_HR
-                            ? "待人事审批"
-                            : contract.status === ContractStatus.DRAFT
-                            ? "草稿"
-                            : contract.status === ContractStatus.EXPIRED
-                            ? "已到期"
-                            : contract.status === ContractStatus.TERMINATED
-                            ? "已终止"
-                            : contract.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>{new Date(contract.updatedAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/contracts/${contract.id}`}>
-                            查看详情
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
+                              ? "已拒绝"
+                              : contract.status === ContractStatus.PENDING_DEPT
+                              ? "待部门审批"
+                              : contract.status === ContractStatus.PENDING_HR
+                              ? "待人事审批"
+                              : contract.status === ContractStatus.DRAFT
+                              ? "草稿"
+                              : contract.status === ContractStatus.EXPIRED
+                              ? "已到期"
+                              : contract.status === ContractStatus.TERMINATED
+                              ? "已终止"
+                              : contract.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>{new Date(contract.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/contracts/${contract.id}`}>查看详情</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
