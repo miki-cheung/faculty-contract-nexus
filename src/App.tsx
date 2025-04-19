@@ -44,10 +44,13 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   
                   <Route path="/" element={<AppLayout />}>
-                    {/* 教师角色: 重定向到我的合同页面 */}
-                    <Route path="dashboard" element={<Navigate to="/my-contracts" replace />} />
+                    {/* 基于角色的重定向 */}
+                    <Route 
+                      path="dashboard" 
+                      element={<Navigate to="/contracts" replace />} 
+                    />
                     
-                    {/* 教师路由: 只保留My Contracts */}
+                    {/* 教师路由 */}
                     <Route path="my-contracts" element={<MyContracts />} />
                     <Route path="my-contracts/:id" element={<ContractDetail />} />
                     
@@ -63,7 +66,6 @@ const App = () => (
                     <Route path="hr-approvals" element={<Approvals />} />
                     <Route path="hr-approvals/:id" element={<ContractDetail />} />
                     <Route path="expiry" element={<Expiry />} />
-                    {/* 修复 reports 路由 - 重定向到合同管理页面 */}
                     <Route path="reports" element={<Navigate to="/contracts" replace />} />
                   </Route>
                   
