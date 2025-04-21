@@ -79,7 +79,8 @@ const ContractDetail = () => {
   const [showApproveDialog, setShowApproveDialog] = React.useState(false);
   const [showRejectDialog, setShowRejectDialog] = React.useState(false);
 
-  if (!id || !user) return null;
+  // 只判断合同是否存在，不再限制权限
+  if (!id) return null;
 
   const contract = getContract(id);
   if (!contract) {
@@ -88,7 +89,7 @@ const ContractDetail = () => {
         <div className="text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
           <h1 className="mt-4 text-2xl font-bold">合同未找到</h1>
-          <p className="text-muted-foreground">找不到该合同或您无权访问</p>
+          <p className="text-muted-foreground">找不到该合同</p>
           <Button
             className="mt-4"
             onClick={() => navigate(-1)}
@@ -408,3 +409,4 @@ const ContractDetail = () => {
 };
 
 export default ContractDetail;
+
