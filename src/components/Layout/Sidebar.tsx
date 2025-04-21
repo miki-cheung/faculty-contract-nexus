@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -90,12 +89,6 @@ export function Sidebar() {
               </SidebarItem>
               <SidebarItem href="/admin/templates" icon={FilePlus}>
                 合同模板
-              </SidebarItem>
-              <SidebarItem href="/admin/approvals" icon={FileCheck}>
-                合同审批
-              </SidebarItem>
-              <SidebarItem href="/admin/expiry" icon={FileText}>
-                到期合同
               </SidebarItem>
             </>
           )}

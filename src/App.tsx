@@ -1,4 +1,3 @@
-
 import {
   QueryClient,
   QueryClientProvider
@@ -28,6 +27,8 @@ import Approvals from "./pages/Approvals";
 import NotFound from "./pages/NotFound";
 import Expiry from "./pages/Expiry";
 import ContractsManagement from "./pages/ContractsManagement";
+import CreateContract from "./pages/CreateContract"; 
+import ContractList from "./pages/ContractList";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,9 @@ const App = () => (
                     {/* 管理员路由 */}
                     <Route path="admin">
                       <Route path="contracts" element={<ContractsManagement />} />
+                      <Route path="contracts/create" element={<CreateContract />} />
+                      <Route path="contracts/list" element={<ContractList />} />
+                      <Route path="contracts/:id" element={<ContractDetail />} />
                       <Route path="templates" element={<Templates />} />
                       <Route path="approvals" element={<Approvals />} />
                       <Route path="approvals/:id" element={<ContractDetail />} />

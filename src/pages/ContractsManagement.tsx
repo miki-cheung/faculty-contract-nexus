@@ -22,19 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { FilePen, FileCheck, FileCheck2, FileX, Clock, FilePlus } from "lucide-react";
 
 const ContractsManagement = () => {
   const { contracts, loading } = useContracts();
@@ -96,8 +84,6 @@ const ContractsManagement = () => {
     { name: "访问", value: contracts.filter(c => c.type === ContractType.VISITING).length },
   ];
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,46 +100,6 @@ const ContractsManagement = () => {
   const totalContracts = filteredContracts.length;
   const totalPages = Math.ceil(totalContracts / pageSize);
   const paginatedContracts = filteredContracts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  const statusPieData = [
-    { name: "已批准", value: contracts.filter(c => c.status === ContractStatus.APPROVED).length },
-    { name: "即将到期", value: expiringContracts.length },
-    { name: "已到期", value: contracts.filter(c => c.status === ContractStatus.EXPIRED).length },
-    { name: "草稿", value: contracts.filter(c => c.status === ContractStatus.DRAFT).length },
-    { name: "已终止", value: contracts.filter(c => c.status === ContractStatus.TERMINATED).length },
-  ];
-
-  function getMonthlyStats(contracts) {
-    const now = new Date();
-    const months = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-    }
-    const stats = months.map(month => ({ month, 新签: 0, 续签: 0, 终止: 0 }));
-    contracts.forEach(contract => {
-      const signMonth = contract.startDate.slice(0, 7);
-      const endMonth = contract.endDate.slice(0, 7);
-      if (months.includes(signMonth)) stats[months.indexOf(signMonth)]["新签"]++;
-      if (months.includes(endMonth) && contract.status === ContractStatus.TERMINATED) stats[months.indexOf(endMonth)]["终止"]++;
-    });
-    return stats;
-  }
-
-  function getMonthlyStatsWithMock(contracts) {
-    let stats = getMonthlyStats(contracts);
-    if (!stats.some(item => item["新签"] > 0 || item["续签"] > 0 || item["终止"] > 0)) {
-      stats = [
-        { month: "2025-01", 新签: 8, 续签: 3, 终止: 1 },
-        { month: "2025-02", 新签: 5, 续签: 2, 终止: 0 },
-        { month: "2025-03", 新签: 7, 续签: 4, 终止: 2 },
-        { month: "2025-04", 新签: 6, 续签: 3, 终止: 1 },
-      ];
-    }
-    return stats;
-  }
-
-  const monthlyStats = getMonthlyStatsWithMock(contracts);
 
   function getDeptStats(contracts, users) {
     const deptMap = {};
@@ -187,7 +133,15 @@ const ContractsManagement = () => {
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold tracking-tight">全校合同列表</h2>
-          <Button variant="outline" onClick={() => window.history.back()}>返回</Button>
+          <div className="flex gap-2">
+            <Button variant="default" asChild>
+              <Link to="/create-contract" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                创建合同
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => window.history.back()}>返回</Button>
+          </div>
         </div>
         <div className="flex gap-2 mb-4">
           <input
@@ -302,275 +256,236 @@ const ContractsManagement = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto py-8 space-y-4 bg-[#F6F5FF]">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">合同管理</h2>
-          <p className="text-muted-foreground mt-2">管理和监控所有合同状态</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-2xl font-bold">合同管理</h1>
+            <p className="text-gray-500">管理所有教师合同</p>
+          </div>
+          <Button 
+            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+            asChild
+          >
+            <Link to="/admin/contracts/create">
+              <FilePlus className="w-4 h-4" />
+              创建合同
+            </Link>
+          </Button>
         </div>
-        <div className="flex gap-4 items-center">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px] bg-background">
-              <SelectValue placeholder="选择时间范围" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month">本月</SelectItem>
-              <SelectItem value="quarter">本季度</SelectItem>
-              <SelectItem value="year">本年度</SelectItem>
-              <SelectItem value="all">全部</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" asChild>
-            <Link to="/contract-list" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
+        <div className="flex gap-2 items-center">
+          <select 
+            value={timeRange} 
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value="month">本月</option>
+            <option value="quarter">本季度</option>
+            <option value="year">本年度</option>
+            <option value="all">全部</option>
+          </select>
+          <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1" asChild>
+            <Link to="/admin/contracts/list">
+              <FileText className="w-4 w-4" />
               查看所有合同
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-muted-foreground text-sm">总合同数</span>
-              <span className="text-3xl font-bold">{contracts.length}</span>
-              <span className="text-xs text-muted-foreground">较上月增长 5%</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-blue-500 text-white mr-4">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">总合同数</div>
+            <div className="text-xl font-medium">{contracts.length}</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-gray-500 text-white mr-4">
+            <FilePen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">草稿</div>
+            <div className="text-xl font-medium">{contracts.filter(c => c.status === ContractStatus.DRAFT).length}</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-yellow-500 text-white mr-4">
+            <FileCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">待签署</div>
+            <div className="text-xl font-medium">
+              {contracts.filter(c => 
+                c.status === ContractStatus.PENDING_DEPT || 
+                c.status === ContractStatus.PENDING_HR
+              ).length}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-muted-foreground text-sm">生效中</span>
-              <span className="text-3xl font-bold text-status-approved">
-                {contracts.filter(c => c.status === ContractStatus.APPROVED).length}
-              </span>
-              <span className="text-xs text-muted-foreground">占总数 {Math.round(contracts.filter(c => c.status === ContractStatus.APPROVED).length / contracts.length * 100)}%</span>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-green-500 text-white mr-4">
+            <FileCheck2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">已签署</div>
+            <div className="text-xl font-medium">{contracts.filter(c => c.status === ContractStatus.APPROVED).length}</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-red-500 text-white mr-4">
+            <FileX className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">已作废</div>
+            <div className="text-xl font-medium">
+              {contracts.filter(c => 
+                c.status === ContractStatus.REJECTED || 
+                c.status === ContractStatus.TERMINATED
+              ).length}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-muted-foreground text-sm">待审批</span>
-              <span className="text-3xl font-bold text-status-pending">
-                {contracts.filter(c => c.status === ContractStatus.PENDING_HR || c.status === ContractStatus.PENDING_DEPT).length}
-              </span>
-              <span className="text-xs text-status-pending">需要您的处理</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-muted-foreground text-sm">即将到期</span>
-              <span className="text-3xl font-bold text-status-expired">{expiringContracts.length}</span>
-              <span className="text-xs text-status-expired">30天内到期</span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
+          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-amber-500 text-white mr-4">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">即将到期</div>
+            <div className="text-xl font-medium">{expiringContracts.length}</div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">合同状态分布</CardTitle>
-            <CardDescription>按合同状态统计分布情况</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
-              {contracts.length === 0 ? (
-                <span className="text-muted-foreground">暂无数据</span>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusPieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {COLORS.map((color, idx) => (
-                        <Cell key={color} fill={color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">月度合同趋势</CardTitle>
-            <CardDescription>显示每月合同新签、续签和终止数量</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={monthlyStats}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="新签" fill="#8884d8" />
-                  <Bar dataKey="续签" fill="#82ca9d" />
-                  <Bar dataKey="终止" fill="#ff8042" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
-            即将到期的合同
-          </CardTitle>
-          <CardDescription>显示30天内即将到期的合同</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading || usersLoading ? (
-            <div className="text-center py-4">加载中...</div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex flex-col items-center justify-center bg-accent/10 rounded-lg px-4 py-3">
-                  <div className="text-xs text-muted-foreground">即将到期</div>
-                  <div className="text-2xl font-bold text-yellow-600">{expiringContracts.length}</div>
-                </div>
-                <div className="flex flex-col items-center justify-center bg-accent/10 rounded-lg px-4 py-3">
-                  <div className="text-xs text-muted-foreground">平均剩余天数</div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {Math.round(expiringContracts.reduce((sum, c) => sum + Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now())/(1000*60*60*24))), 0) / expiringContracts.length) || 0}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {expiringContracts.map((contract) => {
-                  const endDate = new Date(contract.endDate);
-                  const now = new Date();
-                  const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-                  return (
-                    <div key={contract.id} 
-                      className="flex items-center justify-between bg-card hover:bg-accent/5 transition-colors rounded-lg p-4 border">
-                      <div>
-                        <div className="font-medium text-lg flex items-center gap-2">
-                          {contract.title}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">教师：{getTeacherName(contract.teacherId)}</div>
-                        <div className="text-sm text-muted-foreground">到期：{new Date(contract.endDate).toLocaleDateString()}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
-                          剩余{daysLeft}天
-                        </span>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/contracts/${contract.id}`}>查看详情</Link>
-                        </Button>
+      <div className="bg-white rounded-md p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-medium flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              即将到期的合同
+            </h3>
+            <p className="text-sm text-gray-500">显示30天内即将到期的合同</p>
+          </div>
+        </div>
+        {loading || usersLoading ? (
+          <div className="text-center py-4">加载中...</div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {expiringContracts.map((contract) => {
+                const endDate = new Date(contract.endDate);
+                const now = new Date();
+                const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                
+                return (
+                  <div key={contract.id} 
+                    className="bg-white border border-gray-100 rounded-md overflow-hidden">
+                    <div className="border-l-4 border-yellow-500 pl-3 py-2 bg-yellow-50">
+                      <div className="text-sm font-medium line-clamp-1 pr-2">
+                        {contract.title}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="p-3">
+                      <div className="space-y-2 text-sm text-gray-500 mb-3">
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                          </svg>
+                          <span>{getTeacherName(contract.teacherId)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                          </svg>
+                          <span>到期：{new Date(contract.endDate).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          剩余{daysLeft}天
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl">最近更新的合同</CardTitle>
-              <CardDescription>显示最近更新的10份合同</CardDescription>
-            </div>
-            <Button variant="outline" size="icon">
-              <Download className="h-4 w-4" />
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading || usersLoading ? (
-            <div className="text-center py-4">加载中...</div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>合同标题</TableHead>
-                    <TableHead>教师姓名</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>更新时间</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contracts
-                    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                    .slice(0, 10)
-                    .map(contract => (
-                      <TableRow key={contract.id}>
-                        <TableCell>{contract.title}</TableCell>
-                        <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              contract.status === ContractStatus.APPROVED
-                                ? "bg-status-approved/10 text-status-approved"
-                                : contract.status === ContractStatus.REJECTED
-                                ? "bg-status-rejected/10 text-status-rejected"
-                                : contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR
-                                ? "bg-status-pending/10 text-status-pending"
-                                : "bg-status-draft/10 text-status-draft"
-                            }`}
-                          >
-                            {contract.status === ContractStatus.APPROVED
-                              ? "已批准"
-                              : contract.status === ContractStatus.REJECTED
-                              ? "已拒绝"
-                              : contract.status === ContractStatus.PENDING_DEPT
-                              ? "待部门审批"
-                              : contract.status === ContractStatus.PENDING_HR
-                              ? "待人事审批"
-                              : contract.status === ContractStatus.DRAFT
-                              ? "草稿"
-                              : contract.status === ContractStatus.EXPIRED
-                              ? "已到期"
-                              : contract.status === ContractStatus.TERMINATED
-                              ? "已终止"
-                              : contract.status}
-                          </span>
-                        </TableCell>
-                        <TableCell>{new Date(contract.updatedAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/contracts/${contract.id}`}>查看详情</Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      <div className="bg-white rounded-md p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-medium">签署中的合同</h3>
+            <p className="text-sm text-gray-500">显示当前正在签署流程中的合同</p>
+          </div>
+          <Button variant="outline" size="sm" className="flex items-center gap-1 border border-blue-500 text-blue-500 hover:bg-blue-50">
+            <Download className="h-4 w-4" />
+            导出
+          </Button>
+        </div>
+        {loading || usersLoading ? (
+          <div className="text-center py-4">加载中...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">合同标题</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">教师姓名</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">当前阶段</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">创建时间</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-500">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contracts
+                  .filter(contract => 
+                    contract.status === ContractStatus.PENDING_DEPT || 
+                    contract.status === ContractStatus.PENDING_HR)
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .slice(0, 10)
+                  .map((contract, index) => (
+                    <tr key={contract.id} className={index % 2 === 1 ? "bg-gray-50" : ""}>
+                      <td className="py-3 px-4 border-b border-gray-100">{contract.title}</td>
+                      <td className="py-3 px-4 border-b border-gray-100">{getTeacherName(contract.teacherId)}</td>
+                      <td className="py-3 px-4 border-b border-gray-100">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            contract.status === ContractStatus.PENDING_DEPT
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {contract.status === ContractStatus.PENDING_DEPT
+                            ? "部门审批中"
+                            : "人事审批中"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 border-b border-gray-100">{new Date(contract.createdAt).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 border-b border-gray-100 text-right">
+                        {/* 查看详情按钮已移除 */}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
