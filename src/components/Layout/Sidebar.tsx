@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -62,36 +63,40 @@ export function Sidebar() {
 
       <div className="px-3 py-2">
         <div className="space-y-1">
-          {/* 教师角色只显示"我的合同"导航项 */}
+          {/* 教师角色菜单 */}
           {user.role === UserRole.TEACHER && (
-            <SidebarItem href="/my-contracts" icon={FileText}>
+            <SidebarItem href="/teacher/contracts" icon={FileText}>
               我的合同
             </SidebarItem>
           )}
 
+          {/* 部门管理员菜单 */}
           {user.role === UserRole.DEPT_ADMIN && (
             <>
-              <SidebarItem href="/dept-contracts" icon={FileText}>
+              <SidebarItem href="/dept/contracts" icon={FileText}>
                 部门合同
               </SidebarItem>
-              <SidebarItem href="/approvals" icon={FileCheck}>
+              <SidebarItem href="/dept/approvals" icon={FileCheck}>
                 合同审批
               </SidebarItem>
             </>
           )}
 
+          {/* 人事管理员菜单 */}
           {user.role === UserRole.HR_ADMIN && (
             <>
-              <SidebarItem href="/contracts" icon={FileText}>
+              <SidebarItem href="/admin/contracts" icon={FileText}>
                 合同管理
               </SidebarItem>
-              <SidebarItem href="/templates" icon={FilePlus}>
+              <SidebarItem href="/admin/templates" icon={FilePlus}>
                 合同模板
               </SidebarItem>
-              <SidebarItem href="/hr-approvals" icon={FileCheck}>
+              <SidebarItem href="/admin/approvals" icon={FileCheck}>
                 合同审批
               </SidebarItem>
-              {/* 报表统计入口已移除 */}
+              <SidebarItem href="/admin/expiry" icon={FileText}>
+                到期合同
+              </SidebarItem>
             </>
           )}
         </div>

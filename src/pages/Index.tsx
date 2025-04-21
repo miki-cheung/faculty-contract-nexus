@@ -21,14 +21,14 @@ const Index = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // 基于用户角色重定向到不同页面
+  // 基于用户角色重定向到不同端口
   switch (user.role) {
     case UserRole.HR_ADMIN:
-      return <Navigate to="/contracts" replace />;
+      return <Navigate to="/admin/contracts" replace />;
     case UserRole.DEPT_ADMIN:
-      return <Navigate to="/dept-contracts" replace />;
+      return <Navigate to="/dept/contracts" replace />;
     case UserRole.TEACHER:
-      return <Navigate to="/my-contracts" replace />;
+      return <Navigate to="/teacher/contracts" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
