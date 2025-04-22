@@ -338,11 +338,11 @@ const ContractsManagement = () => {
         {/* 总合同数 - 左侧大卡片 */}
         <div className="row-span-2 col-span-1 bg-white rounded-xl shadow-sm p-5 flex flex-col">
           <div className="text-lg font-medium text-gray-700 mb-1">合同数量</div>
-          <div className="flex-grow flex flex-col items-center justify-center">
-            <div className="text-5xl font-bold mb-4">{contracts.length}</div>
-            <div className="w-24 h-24 relative">
+          <div className="flex-grow flex flex-col items-start justify-center">
+            <div className="text-5xl font-bold mb-4 self-start">{contracts.length}</div>
+            <div className="w-24 h-24 relative self-center">
+              {/* 背景圆环 */}
               <svg viewBox="0 0 100 100" className="w-full h-full">
-                {/* 背景圆环 */}
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="15" />
                 
                 {/* 已签署部分 - 蓝色 */}
@@ -372,7 +372,7 @@ const ContractsManagement = () => {
                 />
               </svg>
             </div>
-            <div className="flex gap-6 mt-4 justify-center">
+            <div className="flex gap-6 mt-4 self-center">
               <div className="flex items-center">
                 <span className="w-3 h-3 rounded-full bg-indigo-600 mr-2"></span>
                 <span className="text-sm">已签署</span>
@@ -450,8 +450,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                <path d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -498,7 +497,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -521,7 +520,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                 <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
               </svg>
             </div>
