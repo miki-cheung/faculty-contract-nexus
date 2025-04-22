@@ -338,50 +338,56 @@ const ContractsManagement = () => {
         {/* 总合同数 - 左侧大卡片 */}
         <div className="row-span-2 col-span-1 bg-white rounded-xl shadow-sm p-5 flex flex-col">
           <div className="text-lg font-medium text-gray-700 mb-1">合同数量</div>
-          <div className="flex-grow flex flex-col items-start justify-center">
+          <div className="flex-grow flex flex-col items-start justify-center space-y-4">
             <div className="text-5xl font-bold mb-4 self-start">{contracts.length}</div>
-            <div className="w-24 h-24 relative self-center">
-              {/* 背景圆环 */}
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="15" />
-                
-                {/* 已签署部分 - 蓝色 */}
-                <circle 
-                  cx="50" 
-                  cy="50" 
-                  r="40" 
-                  fill="none" 
-                  stroke="#4f46e5" 
-                  strokeWidth="15" 
-                  strokeDasharray={`${Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
-                  strokeDashoffset="0"
-                  transform="rotate(-90 50 50)"
-                />
-                
-                {/* 未签署部分 - 浅蓝色 */}
-                <circle 
-                  cx="50" 
-                  cy="50" 
-                  r="40" 
-                  fill="none" 
-                  stroke="#93c5fd" 
-                  strokeWidth="15" 
-                  strokeDasharray={`${Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
-                  strokeDashoffset={`${-Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)}`}
-                  transform="rotate(-90 50 50)"
-                />
-              </svg>
-            </div>
-            <div className="flex gap-6 mt-4 self-center">
-              <div className="flex items-center">
-                <span className="w-3 h-3 rounded-full bg-indigo-600 mr-2"></span>
-                <span className="text-sm">已签署</span>
-                <span className="text-sm font-medium ml-1">{Math.round((approvedContracts / Math.max(contracts.length, 1)) * 100)}%</span>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-indigo-600 mr-2"></span>
+                  <span className="text-sm">已签署</span>
+                  <span className="text-sm font-semibold ml-1">
+                    {Math.round((approvedContracts / Math.max(contracts.length, 1)) * 100)}%
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-blue-300 mr-2"></span>
+                  <span className="text-sm">未签署</span>
+                  <span className="text-sm font-semibold ml-1">
+                    {Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 100)}%
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center">
-                <span className="w-3 h-3 rounded-full bg-blue-300 mr-2"></span>
-                <span className="text-sm">未签署</span>
-                <span className="text-sm font-medium ml-1">{Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 100)}%</span>
+              <div className="w-28 h-28 relative">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  {/* 背景圆环 */}
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="15" />
+                  
+                  {/* 已签署部分 - 蓝色 */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="#4f46e5"
+                    strokeWidth="15"
+                    strokeDasharray={`${Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
+                    strokeDashoffset="0"
+                    transform="rotate(-90 50 50)"
+                  />
+                  
+                  {/* 未签署部分 - 浅蓝色 */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="#93c5fd"
+                    strokeWidth="15"
+                    strokeDasharray={`${Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
+                    strokeDashoffset={`${-Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)}`}
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
               </div>
             </div>
           </div>
