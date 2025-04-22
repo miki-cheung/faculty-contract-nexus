@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { FilePen, FileCheck, FileCheck2, FileX, Clock, FilePlus } from "lucide-react";
+import { ClipboardSignature } from "lucide-react";
 
 const ContractsManagement = () => {
   const { contracts, loading } = useContracts();
@@ -128,11 +129,37 @@ const ContractsManagement = () => {
 
   const deptStats = getDeptStatsWithMock(contracts, users);
 
+  const draftContracts = contracts.filter(
+    (contract) => contract.status === ContractStatus.DRAFT
+  ).length;
+  const pendingContracts = contracts.filter(
+    (contract) =>
+      contract.status === ContractStatus.PENDING_DEPT ||
+      contract.status === ContractStatus.PENDING_HR
+  ).length;
+  const approvedContracts = contracts.filter(
+    (contract) => contract.status === ContractStatus.APPROVED
+  ).length;
+  const rejectedContracts = contracts.filter(
+    (contract) =>
+      contract.status === ContractStatus.REJECTED ||
+      contract.status === ContractStatus.TERMINATED
+  ).length;
+  const expiredContracts = contracts.filter(
+    (contract) => contract.status === ContractStatus.EXPIRED
+  ).length;
+  const unsignedContracts = contracts.filter(
+    (contract) => 
+      contract.status === ContractStatus.DRAFT || 
+      contract.status === ContractStatus.PENDING_DEPT || 
+      contract.status === ContractStatus.PENDING_HR
+  ).length;
+
   if (isContractList) {
     return (
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold tracking-tight">全校合同列表</h2>
+          <h2 className="text-3xl font-bold">全校合同列表</h2>
           <div className="flex gap-2">
             <Button variant="default" asChild>
               <Link to="/create-contract" className="flex items-center gap-2">
@@ -195,40 +222,54 @@ const ContractsManagement = () => {
                         <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                         <TableCell>{contract.type}</TableCell>
                         <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              contract.status === ContractStatus.APPROVED
-                                ? "bg-status-approved/10 text-status-approved"
-                                : contract.status === ContractStatus.REJECTED
-                                ? "bg-status-rejected/10 text-status-rejected"
-                                : "bg-status-pending/10 text-status-pending"
-                            }`}
+                          <Select 
+                            value={contract.status} 
+                            onValueChange={(newStatus) => {
+                              console.log(`将合同 ${contract.id} 的状态从 ${contract.status} 更改为 ${newStatus}`);
+                              // 这里可以添加更新合同状态的逻辑
+                            }}
                           >
-                            {contract.status === ContractStatus.APPROVED
-                              ? "已批准"
-                              : contract.status === ContractStatus.REJECTED
-                              ? "已拒绝"
-                              : contract.status === ContractStatus.PENDING_DEPT
-                              ? "待部门审批"
-                              : contract.status === ContractStatus.PENDING_HR
-                              ? "待人事审批"
-                              : contract.status === ContractStatus.DRAFT
-                              ? "草稿"
-                              : contract.status === ContractStatus.EXPIRED
-                              ? "已到期"
-                              : contract.status === ContractStatus.TERMINATED
-                              ? "已终止"
-                              : contract.status}
-                          </span>
+                            <SelectTrigger className="h-8 text-xs min-w-[120px] border-none shadow-none p-0 bg-transparent">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                待签署
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
+                              <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
+                              <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                              <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
+                              <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>{contract.startDate}</TableCell>
                         <TableCell>{contract.endDate}</TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to={`/contracts/${contract.id}`}>
-                              查看详情
-                            </Link>
-                          </Button>
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-xs px-2 py-1 h-auto border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                              onClick={() => {
+                                console.log(`编辑合同: ${contract.id}`);
+                                // 处理编辑逻辑
+                              }}
+                            >
+                              编辑
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-xs px-2 py-1 h-auto border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                              onClick={() => {
+                                console.log(`删除合同: ${contract.id}`);
+                                // 处理删除逻辑
+                              }}
+                            >
+                              删除
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -256,7 +297,7 @@ const ContractsManagement = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-4 bg-[#F6F5FF]">
+    <div className="container mx-auto py-8 space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-6">
           <div>
@@ -293,74 +334,197 @@ const ContractsManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-blue-500 text-white mr-4">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">总合同数</div>
-            <div className="text-xl font-medium">{contracts.length}</div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-gray-500 text-white mr-4">
-            <FilePen className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">草稿</div>
-            <div className="text-xl font-medium">{contracts.filter(c => c.status === ContractStatus.DRAFT).length}</div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-yellow-500 text-white mr-4">
-            <FileCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">待签署</div>
-            <div className="text-xl font-medium">
-              {contracts.filter(c => 
-                c.status === ContractStatus.PENDING_DEPT || 
-                c.status === ContractStatus.PENDING_HR
-              ).length}
+      <div className="grid grid-cols-4 grid-rows-2 gap-6 mb-8">
+        {/* 总合同数 - 左侧大卡片 */}
+        <div className="row-span-2 col-span-1 bg-white rounded-xl shadow-sm p-5 flex flex-col">
+          <div className="text-lg font-medium text-gray-700 mb-1">合同数量</div>
+          <div className="flex-grow flex flex-col items-center justify-center">
+            <div className="text-5xl font-bold mb-4">{contracts.length}</div>
+            <div className="w-24 h-24 relative">
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                {/* 背景圆环 */}
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e6e6e6" strokeWidth="15" />
+                
+                {/* 已签署部分 - 蓝色 */}
+                <circle 
+                  cx="50" 
+                  cy="50" 
+                  r="40" 
+                  fill="none" 
+                  stroke="#4f46e5" 
+                  strokeWidth="15" 
+                  strokeDasharray={`${Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
+                  strokeDashoffset="0"
+                  transform="rotate(-90 50 50)"
+                />
+                
+                {/* 未签署部分 - 浅蓝色 */}
+                <circle 
+                  cx="50" 
+                  cy="50" 
+                  r="40" 
+                  fill="none" 
+                  stroke="#93c5fd" 
+                  strokeWidth="15" 
+                  strokeDasharray={`${Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
+                  strokeDashoffset={`${-Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)}`}
+                  transform="rotate(-90 50 50)"
+                />
+              </svg>
+            </div>
+            <div className="flex gap-6 mt-4 justify-center">
+              <div className="flex items-center">
+                <span className="w-3 h-3 rounded-full bg-indigo-600 mr-2"></span>
+                <span className="text-sm">已签署</span>
+                <span className="text-sm font-medium ml-1">{Math.round((approvedContracts / Math.max(contracts.length, 1)) * 100)}%</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-3 h-3 rounded-full bg-blue-300 mr-2"></span>
+                <span className="text-sm">未签署</span>
+                <span className="text-sm font-medium ml-1">{Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 100)}%</span>
+              </div>
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-green-500 text-white mr-4">
-            <FileCheck2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">已签署</div>
-            <div className="text-xl font-medium">{contracts.filter(c => c.status === ContractStatus.APPROVED).length}</div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-red-500 text-white mr-4">
-            <FileX className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-sm text-gray-500">已作废</div>
-            <div className="text-xl font-medium">
-              {contracts.filter(c => 
-                c.status === ContractStatus.REJECTED || 
-                c.status === ContractStatus.TERMINATED
-              ).length}
+        {/* 已签署 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">已签署</div>
+              <div className="text-5xl font-bold mt-2">{approvedContracts}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
+                  </svg>
+                  3.4%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
             </div>
           </div>
         </div>
-        
-        <div className="bg-white rounded-md p-4 flex items-center border shadow-sm">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-amber-500 text-white mr-4">
-            <Clock className="w-5 h-5" />
+        {/* 即将到期 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">即将到期</div>
+              <div className="text-5xl font-bold mt-2">{expiringContracts.length}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-red-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
+                  </svg>
+                  1.2%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+            </div>
           </div>
-          <div>
-            <div className="text-sm text-gray-500">即将到期</div>
-            <div className="text-xl font-medium">{expiringContracts.length}</div>
+        </div>
+        {/* 待签署 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">月度总数</div>
+              <div className="text-5xl font-bold mt-2">{pendingContracts + approvedContracts}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-red-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
+                  </svg>
+                  0.2%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {/* 未签署 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">未签署</div>
+              <div className="text-5xl font-bold mt-2">{unsignedContracts}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
+                  </svg>
+                  2.5%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {/* 草稿 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">草稿</div>
+              <div className="text-5xl font-bold mt-2">{draftContracts}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
+                  </svg>
+                  1.8%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {/* 已作废 */}
+        <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-lg font-medium text-gray-700">已作废</div>
+              <div className="text-5xl font-bold mt-2">{rejectedContracts}</div>
+              <div className="flex items-center mt-2 text-sm">
+                <span className="text-red-500 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
+                  </svg>
+                  0.5%
+                </span>
+                <span className="text-gray-400 ml-1">自上月以来</span>
+              </div>
+            </div>
+            <div className="p-2 rounded-md border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -441,12 +605,14 @@ const ContractsManagement = () => {
           <div className="text-center py-4">加载中...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full bg-gray-50">
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="py-3 px-4 text-left font-medium text-gray-500">合同标题</th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">教师姓名</th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500">当前阶段</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">状态</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">开始时间</th>
+                  <th className="py-3 px-4 text-left font-medium text-gray-500">结束时间</th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">创建时间</th>
                   <th className="py-3 px-4 text-right font-medium text-gray-500">操作</th>
                 </tr>
@@ -459,25 +625,63 @@ const ContractsManagement = () => {
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .slice(0, 10)
                   .map((contract, index) => (
-                    <tr key={contract.id} className={index % 2 === 1 ? "bg-gray-50" : ""}>
+                    <tr key={contract.id} className="hover:bg-gray-100">
                       <td className="py-3 px-4 border-b border-gray-100">{contract.title}</td>
                       <td className="py-3 px-4 border-b border-gray-100">{getTeacherName(contract.teacherId)}</td>
                       <td className="py-3 px-4 border-b border-gray-100">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            contract.status === ContractStatus.PENDING_DEPT
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                          }`}
+                        <Select 
+                          value={contract.status} 
+                          onValueChange={(newStatus) => {
+                            console.log(`将合同 ${contract.id} 的状态从 ${contract.status} 更改为 ${newStatus}`);
+                            // 这里可以添加更新合同状态的逻辑
+                          }}
                         >
-                          {contract.status === ContractStatus.PENDING_DEPT
-                            ? "部门审批中"
-                            : "人事审批中"}
-                        </span>
+                          <SelectTrigger className="h-8 text-xs min-w-[120px] border-none shadow-none p-0 bg-transparent">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              待签署
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
+                            <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
+                            <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                            <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
+                            <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="py-3 px-4 border-b border-gray-100">
+                        {contract.startDate ? new Date(contract.startDate).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="py-3 px-4 border-b border-gray-100">
+                        {contract.endDate ? new Date(contract.endDate).toLocaleDateString() : "-"}
                       </td>
                       <td className="py-3 px-4 border-b border-gray-100">{new Date(contract.createdAt).toLocaleDateString()}</td>
                       <td className="py-3 px-4 border-b border-gray-100 text-right">
-                        {/* 查看详情按钮已移除 */}
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs px-2 py-1 h-auto border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                            onClick={() => {
+                              console.log(`编辑合同: ${contract.id}`);
+                              // 处理编辑逻辑
+                            }}
+                          >
+                            编辑
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs px-2 py-1 h-auto border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                            onClick={() => {
+                              console.log(`删除合同: ${contract.id}`);
+                              // 处理删除逻辑
+                            }}
+                          >
+                            删除
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -69,6 +69,8 @@ const ContractList = () => {
     // 状态过滤
     const statusMatch = 
       statusFilter === "all" || 
+      (statusFilter === "pending" && (contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR)) ||
+      (statusFilter === "rejected" && (contract.status === ContractStatus.REJECTED || contract.status === ContractStatus.TERMINATED)) ||
       contract.status === statusFilter;
     
     // 类型过滤
@@ -93,13 +95,13 @@ const ContractList = () => {
   // 状态显示文本
   const getStatusText = (status: ContractStatus) => {
     switch(status) {
-      case ContractStatus.APPROVED: return "已批准";
-      case ContractStatus.PENDING_DEPT: return "待部门审批";
-      case ContractStatus.PENDING_HR: return "待人事审批";
-      case ContractStatus.REJECTED: return "已拒绝";
+      case ContractStatus.APPROVED: return "已签署";
+      case ContractStatus.PENDING_DEPT: 
+      case ContractStatus.PENDING_HR: return "待签署";
+      case ContractStatus.REJECTED:
+      case ContractStatus.TERMINATED: return "已作废";
       case ContractStatus.DRAFT: return "草稿";
-      case ContractStatus.EXPIRED: return "已到期";
-      case ContractStatus.TERMINATED: return "已终止";
+      case ContractStatus.EXPIRED: return "即将到期";
       default: return status;
     }
   };
@@ -115,23 +117,17 @@ const ContractList = () => {
     }
   };
   
-  // 状态样式
+  // 获取状态样式
   const getStatusStyle = (status: ContractStatus) => {
     switch(status) {
-      case ContractStatus.APPROVED:
-        return "bg-green-100 text-green-800";
-      case ContractStatus.PENDING_DEPT:
-      case ContractStatus.PENDING_HR:
-        return "bg-yellow-100 text-yellow-800";
+      case ContractStatus.APPROVED: return "bg-green-100 text-green-800";
+      case ContractStatus.PENDING_DEPT: 
+      case ContractStatus.PENDING_HR: return "bg-blue-100 text-blue-800";
       case ContractStatus.REJECTED:
-      case ContractStatus.TERMINATED:
-        return "bg-red-100 text-red-800";
-      case ContractStatus.DRAFT:
-        return "bg-gray-100 text-gray-800";
-      case ContractStatus.EXPIRED:
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case ContractStatus.TERMINATED: return "bg-red-100 text-red-800";
+      case ContractStatus.DRAFT: return "bg-gray-100 text-gray-800";
+      case ContractStatus.EXPIRED: return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
   
@@ -169,13 +165,11 @@ const ContractList = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有状态</SelectItem>
-                  <SelectItem value={ContractStatus.APPROVED}>已批准</SelectItem>
-                  <SelectItem value={ContractStatus.PENDING_DEPT}>待部门审批</SelectItem>
-                  <SelectItem value={ContractStatus.PENDING_HR}>待人事审批</SelectItem>
-                  <SelectItem value={ContractStatus.REJECTED}>已拒绝</SelectItem>
                   <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
-                  <SelectItem value={ContractStatus.EXPIRED}>已到期</SelectItem>
-                  <SelectItem value={ContractStatus.TERMINATED}>已终止</SelectItem>
+                  <SelectItem value="pending">待签署</SelectItem>
+                  <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                  <SelectItem value="rejected">已作废</SelectItem>
+                  <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -240,9 +234,26 @@ const ContractList = () => {
                         <TableCell>{getDepartmentName(contract.teacherId)}</TableCell>
                         <TableCell>{getTypeText(contract.type)}</TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(contract.status)}`}>
-                            {getStatusText(contract.status)}
-                          </span>
+                          <Select 
+                            value={contract.status} 
+                            onValueChange={(newStatus) => {
+                              console.log(`将合同 ${contract.id} 的状态从 ${contract.status} 更改为 ${newStatus}`);
+                              // 这里可以添加更新合同状态的逻辑
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs min-w-[120px] border-none shadow-none p-0">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(contract.status as ContractStatus)}`}>
+                                {getStatusText(contract.status as ContractStatus)}
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
+                              <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
+                              <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                              <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
+                              <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
                         <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
@@ -250,7 +261,7 @@ const ContractList = () => {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="text-xs px-2 py-1 h-auto border border-green-500 text-green-500 hover:bg-green-50"
+                            className="text-xs px-2 py-1 h-auto border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
                             onClick={() => {
                               // 处理续签逻辑
                               console.log(`续签合同: ${contract.id}`);
