@@ -300,15 +300,17 @@ const ContractsManagement = () => {
             <h1 className="text-2xl font-bold">合同管理</h1>
             <p className="text-gray-500">管理所有教师合同</p>
           </div>
-          <Button 
-            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
-            asChild
-          >
-            <Link to="/admin/contracts/create">
-              <FilePlus className="w-4 h-4" />
-              创建合同
-            </Link>
-          </Button>
+          <div>
+            <Button 
+              className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+              asChild
+            >
+              <Link to="/admin/contracts/create">
+                <FilePlus className="w-4 h-4" />
+                创建合同
+              </Link>
+            </Button>
+          </div>
         </div>
         <div className="flex gap-2 items-center">
           <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1" asChild>
@@ -339,7 +341,7 @@ const ContractsManagement = () => {
                   <span className="w-3 h-3 rounded-full bg-blue-300 mr-2"></span>
                   <span className="text-sm">未签署</span>
                   <span className="text-sm font-semibold ml-1">
-                    {Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 100)}%
+                    {Math.round(((contracts.length - approvedContracts) / Math.max(contracts.length, 1)) * 100)}%
                   </span>
                 </div>
               </div>
@@ -369,7 +371,7 @@ const ContractsManagement = () => {
                     fill="none"
                     stroke="#93c5fd"
                     strokeWidth="15"
-                    strokeDasharray={`${Math.round((unsignedContracts / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
+                    strokeDasharray={`${Math.round(((contracts.length - approvedContracts) / Math.max(contracts.length, 1)) * 251.2)} 251.2`}
                     strokeDashoffset={`${-Math.round((approvedContracts / Math.max(contracts.length, 1)) * 251.2)}`}
                     transform="rotate(-90 50 50)"
                   />
@@ -390,6 +392,7 @@ const ContractsManagement = () => {
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </div>
+          </div>
         </div>
         {/* 待续签 */}
         <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
@@ -400,7 +403,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
               </svg>
             </div>
           </div>
@@ -414,7 +417,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                <path d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" />
               </svg>
             </div>
           </div>

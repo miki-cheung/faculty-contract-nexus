@@ -11,8 +11,7 @@ import {
   FilePlus,
   Pencil,
   Trash2,
-  MoreHorizontal,
-  Check
+  MoreHorizontal
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,12 +37,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import { useContracts } from "@/contexts/ContractContext";
 import { useUsers } from "@/contexts/UserContext";
@@ -51,11 +44,11 @@ import { ContractStatus, ContractType } from "@/types";
 
 const ContractList = () => {
   const { contracts, loading } = useContracts();
-  const { getUser, getDepartment, loading: usersLoading } = useUsers();
+  const { getUser, getDepartment, users, departments, loading: usersLoading } = useUsers();
   
   // 状态
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string[]>(["all"]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,37 +69,63 @@ const ContractList = () => {
   // 获取部门名称
   const getDepartmentName = (teacherId: string) => {
     const teacher = getUser(teacherId);
-    if (!teacher || !teacher.departmentId) return "未知部门";
+    if (!teacher) return "未知部门";
     
     const department = getDepartment(teacher.departmentId);
     return department ? department.name : "未知部门";
   };
   
+  // 判断合同是否已到期
+  const isContractExpired = (endDate: string): boolean => {
+    try {
+      const today = new Date();
+      const contractEndDate = new Date(endDate);
+      return today > contractEndDate;
+    } catch (error) {
+      console.error("日期转换错误:", error);
+      return false;
+    }
+  };
+
+  // 获取合同期限状态的标签样式
+  const getContractTermStatusClass = (isExpired: boolean): string => {
+    return isExpired 
+      ? "bg-red-100 text-red-800" 
+      : "bg-green-100 text-green-800";
+  };
+  
   // 过滤合同
   const filteredContracts = contracts.filter(contract => {
-    // 搜索过滤
-    const searchMatch = 
-      searchTerm === "" || 
-      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      getTeacherName(contract.teacherId).toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // 状态过滤
-    const statusMatch = 
-      statusFilter.includes("all") || 
-      statusFilter.includes(contract.status);
-    
-    // 类型过滤
-    const typeMatch = 
-      typeFilter === "all" || 
-      contract.type === typeFilter;
-    
-    // 部门过滤（基于教师所属部门）
-    const teacher = getUser(contract.teacherId);
-    const departmentMatch = 
-      departmentFilter === "all" || 
-      (teacher && teacher.departmentId === departmentFilter);
-    
-    return searchMatch && statusMatch && typeMatch && departmentMatch;
+    try {
+      // 搜索过滤
+      const searchMatch = 
+        searchTerm === "" || 
+        contract.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        getTeacherName(contract.teacherId).toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // 状态过滤
+      const statusMatch = 
+        statusFilter === "all" || 
+        (statusFilter === "pending" && (contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR)) ||
+        (statusFilter === "rejected" && (contract.status === ContractStatus.REJECTED || contract.status === ContractStatus.TERMINATED)) ||
+        contract.status === statusFilter;
+      
+      // 类型过滤
+      const typeMatch = 
+        typeFilter === "all" || 
+        contract.type === typeFilter;
+      
+      // 部门过滤（基于教师所属部门）
+      const teacher = getUser(contract.teacherId);
+      const departmentMatch = 
+        departmentFilter === "all" || 
+        (teacher && teacher.departmentId === departmentFilter);
+      
+      return searchMatch && statusMatch && typeMatch && departmentMatch;
+    } catch (error) {
+      console.error("过滤合同时出错:", error, contract);
+      return false;
+    }
   });
   
   // 分页
@@ -114,7 +133,7 @@ const ContractList = () => {
   const paginatedContracts = filteredContracts
     .slice((currentPage - 1) * pageSize, currentPage * pageSize);
   
-  // 状态显示文本
+  // 获取状态文本
   const getStatusText = (status: ContractStatus) => {
     switch(status) {
       case ContractStatus.APPROVED: return "已签署";
@@ -124,18 +143,7 @@ const ContractList = () => {
       case ContractStatus.TERMINATED: return "已作废";
       case ContractStatus.DRAFT: return "草稿";
       case ContractStatus.ARCHIVED: return "已归档";
-      default: return status;
-    }
-  };
-  
-  // 类型显示文本
-  const getTypeText = (type: ContractType) => {
-    switch(type) {
-      case ContractType.FULL_TIME: return "全职合同";
-      case ContractType.PART_TIME: return "兼职合同";
-      case ContractType.TEMPORARY: return "临时合同";
-      case ContractType.VISITING: return "访问学者";
-      default: return type;
+      default: return "未知状态";
     }
   };
   
@@ -152,23 +160,9 @@ const ContractList = () => {
       default: return "bg-gray-100 text-gray-800";
     }
   };
-  
-  // 判断合同是否已到期
-  const isContractExpired = (endDate: string): boolean => {
-    const today = new Date();
-    const contractEndDate = new Date(endDate);
-    return today > contractEndDate;
-  };
 
-  // 获取合同期限状态的标签样式
-  const getContractTermStatusClass = (isExpired: boolean): string => {
-    return isExpired 
-      ? "bg-red-100 text-red-800" 
-      : "bg-green-100 text-green-800";
-  };
-  
   return (
-    <div className="container mx-auto py-8 bg-[#F6F5FF]">
+    <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">全校合同列表</h1>
@@ -207,102 +201,18 @@ const ContractList = () => {
           
           <div className="flex flex-wrap gap-2">
             <div className="w-40">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    状态筛选
-                    <Filter className="ml-2 h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-60">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="all-status" 
-                        checked={statusFilter.includes("all")}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setStatusFilter(["all"]);
-                          } else {
-                            setStatusFilter([]);
-                          }
-                        }}
-                      />
-                      <label htmlFor="all-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        全部状态
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="pending-status" 
-                        checked={statusFilter.includes(ContractStatus.PENDING_DEPT)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            const newFilter = statusFilter.filter(s => s !== "all");
-                            setStatusFilter([...newFilter, ContractStatus.PENDING_DEPT]);
-                          } else {
-                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.PENDING_DEPT));
-                          }
-                        }}
-                      />
-                      <label htmlFor="pending-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        待签署
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="approved-status" 
-                        checked={statusFilter.includes(ContractStatus.APPROVED)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            const newFilter = statusFilter.filter(s => s !== "all");
-                            setStatusFilter([...newFilter, ContractStatus.APPROVED]);
-                          } else {
-                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.APPROVED));
-                          }
-                        }}
-                      />
-                      <label htmlFor="approved-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        已签署
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="rejected-status" 
-                        checked={statusFilter.includes(ContractStatus.REJECTED)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            const newFilter = statusFilter.filter(s => s !== "all");
-                            setStatusFilter([...newFilter, ContractStatus.REJECTED]);
-                          } else {
-                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.REJECTED));
-                          }
-                        }}
-                      />
-                      <label htmlFor="rejected-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        已作废
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="archived-status" 
-                        checked={statusFilter.includes(ContractStatus.ARCHIVED)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            const newFilter = statusFilter.filter(s => s !== "all");
-                            setStatusFilter([...newFilter, ContractStatus.ARCHIVED]);
-                          } else {
-                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.ARCHIVED));
-                          }
-                        }}
-                      />
-                      <label htmlFor="archived-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        已归档
-                      </label>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="状态筛选" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="pending">待签署</SelectItem>
+                  <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                  <SelectItem value="rejected">已作废</SelectItem>
+                  <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="w-40">
@@ -315,24 +225,32 @@ const ContractList = () => {
                   <SelectItem value={ContractType.FULL_TIME}>全职合同</SelectItem>
                   <SelectItem value={ContractType.PART_TIME}>兼职合同</SelectItem>
                   <SelectItem value={ContractType.TEMPORARY}>临时合同</SelectItem>
-                  <SelectItem value={ContractType.VISITING}>访问学者</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div className="w-40">
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="部门筛选" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">所有部门</SelectItem>
+                  {departments && departments.length > 0 && departments.map(dept => (
+                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
       
-      {/* 合同表格 */}
+      {/* 合同列表 */}
       <div className="bg-white rounded-md border shadow-sm overflow-hidden">
         {loading || usersLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-2 text-gray-500">加载中...</p>
+            <p className="text-gray-500">加载中...</p>
           </div>
         ) : (
           <>
@@ -343,7 +261,6 @@ const ContractList = () => {
                     <TableHead className="w-[200px]">合同编号</TableHead>
                     <TableHead>教师姓名</TableHead>
                     <TableHead>教师工号</TableHead>
-                    <TableHead>所属部门</TableHead>
                     <TableHead>合同类型</TableHead>
                     <TableHead>状态</TableHead>
                     <TableHead>开始日期</TableHead>
@@ -355,7 +272,7 @@ const ContractList = () => {
                 <TableBody>
                   {paginatedContracts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                         没有找到符合条件的合同
                       </TableCell>
                     </TableRow>
@@ -365,8 +282,12 @@ const ContractList = () => {
                         <TableCell className="font-medium">{contract.id}</TableCell>
                         <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                         <TableCell>{getTeacherEmployeeId(contract.teacherId)}</TableCell>
-                        <TableCell>{getDepartmentName(contract.teacherId)}</TableCell>
-                        <TableCell>{getTypeText(contract.type)}</TableCell>
+                        <TableCell>
+                          {contract.type === ContractType.FULL_TIME && "全职合同"}
+                          {contract.type === ContractType.PART_TIME && "兼职合同"}
+                          {contract.type === ContractType.TEMPORARY && "临时合同"}
+                          {contract.type === ContractType.VISITING && "访问学者"}
+                        </TableCell>
                         <TableCell>
                           <Select 
                             value={contract.status} 
@@ -391,9 +312,13 @@ const ContractList = () => {
                         <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
                         <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getContractTermStatusClass(isContractExpired(contract.endDate))}`}>
-                            {isContractExpired(contract.endDate) ? '已到期' : '未到期'}
-                          </span>
+                          {(contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR) ? (
+                            <span className="text-xs text-gray-500">-</span>
+                          ) : (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getContractTermStatusClass(isContractExpired(contract.endDate))}`}>
+                              {isContractExpired(contract.endDate) ? '已到期' : '未到期'}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -449,50 +374,30 @@ const ContractList = () => {
             </div>
             
             {/* 分页 */}
-            {filteredContracts.length > 0 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t">
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-4 border-t">
                 <div className="text-sm text-gray-500">
-                  显示 {(currentPage - 1) * pageSize + 1} 至 {Math.min(currentPage * pageSize, filteredContracts.length)} 条，共 {filteredContracts.length} 条
+                  显示 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredContracts.length)} 项，共 {filteredContracts.length} 项
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="h-8 w-8 p-0"
                   >
                     <ChevronLeft className="h-4 w-4" />
+                    上一页
                   </Button>
-                  <span className="text-sm">
-                    第 {currentPage} 页，共 {totalPages} 页
-                  </span>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="h-8 w-8 p-0"
                   >
+                    下一页
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={(value) => {
-                      setPageSize(Number(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-[70px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10条/页</SelectItem>
-                      <SelectItem value="20">20条/页</SelectItem>
-                      <SelectItem value="50">50条/页</SelectItem>
-                      <SelectItem value="100">100条/页</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             )}
