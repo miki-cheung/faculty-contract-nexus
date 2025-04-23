@@ -1,4 +1,3 @@
-
 // User Types
 export enum UserRole {
   HR_ADMIN = "hr_admin",
@@ -35,7 +34,8 @@ export enum ContractStatus {
   APPROVED = "approved",
   REJECTED = "rejected",
   ARCHIVED = "archived",
-  TERMINATED = "terminated"
+  TERMINATED = "terminated",
+  EXPIRED = "expired"
 }
 
 export enum ContractType {
