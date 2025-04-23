@@ -49,6 +49,9 @@ const formSchema = z.object({
   type: z.nativeEnum(ContractType, {
     required_error: "请选择合同类型",
   }),
+  status: z.nativeEnum(ContractStatus, {
+    required_error: "请选择合同状态",
+  }),
   startDate: z.date({
     required_error: "请选择开始日期",
   }),
@@ -75,6 +78,7 @@ const CreateContract = () => {
   const defaultValues: Partial<FormValues> = {
     title: "",
     type: undefined,
+    status: ContractStatus.PENDING_DEPT,
     startDate: undefined,
     endDate: undefined,
     teacherId: undefined,
@@ -96,7 +100,7 @@ const CreateContract = () => {
         type: values.type,
         startDate: format(values.startDate, "yyyy-MM-dd"),
         endDate: format(values.endDate, "yyyy-MM-dd"),
-        status: ContractStatus.DRAFT,
+        status: values.status,
         templateId: "template1", // 使用默认模板
         data: {}, // 空数据对象，后续在合同详情页填写
       });
@@ -205,6 +209,33 @@ const CreateContract = () => {
                           <SelectItem value={ContractType.VISITING}>
                             访问学者
                           </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>合同状态</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="选择合同状态" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
+                          <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
+                          <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
+                          <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

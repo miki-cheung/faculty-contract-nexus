@@ -265,25 +265,9 @@ const ContractsManagement = () => {
                         <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
                         <TableCell>{contract.type}</TableCell>
                         <TableCell>
-                          <Select 
-                            value={contract.status} 
-                            onValueChange={(newStatus) => {
-                              console.log(`将合同 ${contract.id} 的状态从 ${contract.status} 更改为 ${newStatus}`);
-                              // 这里可以添加更新合同状态的逻辑
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs min-w-[120px] border-none shadow-none p-0 bg-transparent">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                待签署
-                              </span>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
-                              <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
-                              <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
-                              <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            待签署
+                          </span>
                         </TableCell>
                         <TableCell>{contract.startDate}</TableCell>
                         <TableCell>{contract.endDate}</TableCell>
@@ -611,25 +595,9 @@ const ContractsManagement = () => {
                       <td className="py-3 px-4 border-b border-gray-100">{contract.title}</td>
                       <td className="py-3 px-4 border-b border-gray-100">{getTeacherName(contract.teacherId)}</td>
                       <td className="py-3 px-4 border-b border-gray-100">
-                        <Select 
-                          value={contract.status} 
-                          onValueChange={(newStatus) => {
-                            console.log(`将合同 ${contract.id} 的状态从 ${contract.status} 更改为 ${newStatus}`);
-                            // 这里可以添加更新合同状态的逻辑
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs min-w-[120px] border-none shadow-none p-0 bg-transparent">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              待签署
-                            </span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
-                            <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
-                            <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
-                            <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          待签署
+                        </span>
                       </td>
                       <td className="py-3 px-4 border-b border-gray-100">
                         {contract.startDate ? new Date(contract.startDate).toLocaleDateString() : "-"}

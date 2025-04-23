@@ -88,7 +88,7 @@ export function Sidebar() {
                 合同管理
               </SidebarItem>
               <SidebarItem href="/admin/templates" icon={FilePlus}>
-                合同模板
+                合同类型
               </SidebarItem>
             </>
           )}

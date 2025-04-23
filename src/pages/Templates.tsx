@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useTemplates } from "@/contexts/TemplateContext";
 import { useToast } from "@/hooks/use-toast";
@@ -75,8 +74,8 @@ const Templates = () => {
       });
       
       toast({
-        title: "模板创建成功",
-        description: "新的合同模板已成功创建",
+        title: "类型创建成功",
+        description: "新的合同类型已成功创建",
       });
       
       resetForm();
@@ -84,7 +83,7 @@ const Templates = () => {
     } catch (error) {
       toast({
         title: "创建失败",
-        description: "创建模板时发生错误",
+        description: "创建类型时发生错误",
         variant: "destructive",
       });
     }
@@ -116,8 +115,8 @@ const Templates = () => {
       });
       
       toast({
-        title: "模板更新成功",
-        description: "合同模板已成功更新",
+        title: "类型更新成功",
+        description: "合同类型已成功更新",
       });
       
       resetForm();
@@ -125,7 +124,7 @@ const Templates = () => {
     } catch (error) {
       toast({
         title: "更新失败",
-        description: "更新模板时发生错误",
+        description: "更新类型时发生错误",
         variant: "destructive",
       });
     }
@@ -143,15 +142,15 @@ const Templates = () => {
       await deleteTemplate(currentTemplate);
       
       toast({
-        title: "模板删除成功",
-        description: "合同模板已成功删除",
+        title: "类型删除成功",
+        description: "合同类型已成功删除",
       });
       
       setIsDeleteDialogOpen(false);
     } catch (error) {
       toast({
         title: "删除失败",
-        description: "删除模板时发生错误",
+        description: "删除类型时发生错误",
         variant: "destructive",
       });
     }
@@ -171,95 +170,28 @@ const Templates = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">合同模板管理</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <FilePlus className="mr-2 h-4 w-4" />
-              新建模板
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px]">
-            <DialogHeader>
-              <DialogTitle>创建新合同模板</DialogTitle>
-              <DialogDescription>
-                创建一个新的合同模板，填写相关信息以便于后续使用。
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  模板名称
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  模板描述
-                </Label>
-                <Input
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="applicableRoles" className="text-right">
-                  适用角色
-                </Label>
-                <Input
-                  id="applicableRoles"
-                  name="applicableRoles"
-                  value={formData.applicableRoles}
-                  onChange={handleInputChange}
-                  placeholder="教授, 副教授, 讲师"
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="content" className="text-right">
-                  模板内容
-                </Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  rows={8}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                取消
-              </Button>
-              <Button onClick={handleAddTemplate}>
-                创建模板
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <h1 className="text-3xl font-bold">合同类型管理</h1>
+        <Button 
+          onClick={() => {
+            resetForm();
+            setIsAddDialogOpen(true);
+          }}
+        >
+          <FilePlus className="mr-2 h-4 w-4" />
+          新建类型
+        </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>合同模板列表</CardTitle>
-          <CardDescription>查看和管理所有合同模板</CardDescription>
+          <CardTitle>合同类型列表</CardTitle>
+          <CardDescription>管理系统中的合同类型</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>模板名称</TableHead>
+                <TableHead>类型名称</TableHead>
                 <TableHead>描述</TableHead>
                 <TableHead>适用角色</TableHead>
                 <TableHead>版本</TableHead>
@@ -300,19 +232,91 @@ const Templates = () => {
         </CardContent>
       </Card>
       
+      {/* Add Template Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>新建合同类型</DialogTitle>
+            <DialogDescription>
+              创建新的合同类型以便在创建合同时使用。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                类型名称
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                类型描述
+              </Label>
+              <Input
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="applicableRoles" className="text-right">
+                适用角色
+              </Label>
+              <Input
+                id="applicableRoles"
+                name="applicableRoles"
+                value={formData.applicableRoles}
+                onChange={handleInputChange}
+                placeholder="教授, 副教授, 讲师"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="content" className="text-right">
+                类型内容
+              </Label>
+              <Textarea
+                id="content"
+                name="content"
+                value={formData.content}
+                onChange={handleInputChange}
+                className="col-span-3"
+                rows={8}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleAddTemplate}>
+              创建类型
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Template Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
-            <DialogTitle>编辑合同模板</DialogTitle>
+            <DialogTitle>编辑合同类型</DialogTitle>
             <DialogDescription>
-              修改现有合同模板的信息。
+              修改现有合同类型的信息。
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-name" className="text-right">
-                模板名称
+                类型名称
               </Label>
               <Input
                 id="edit-name"
@@ -324,7 +328,7 @@ const Templates = () => {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-description" className="text-right">
-                模板描述
+                类型描述
               </Label>
               <Input
                 id="edit-description"
@@ -348,7 +352,7 @@ const Templates = () => {
             </div>
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="edit-content" className="text-right">
-                模板内容
+                类型内容
               </Label>
               <Textarea
                 id="edit-content"
@@ -377,7 +381,7 @@ const Templates = () => {
           <DialogHeader>
             <DialogTitle>确认删除</DialogTitle>
             <DialogDescription>
-              您确定要删除这个合同模板吗？此操作无法撤销。
+              您确定要删除这个合同类型吗？此操作无法撤销。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
