@@ -6,7 +6,13 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Download,
-  Filter
+  Filter,
+  Upload,
+  FilePlus,
+  Pencil,
+  Trash2,
+  MoreHorizontal,
+  Check
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +32,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { useContracts } from "@/contexts/ContractContext";
 import { useUsers } from "@/contexts/UserContext";
@@ -37,7 +55,7 @@ const ContractList = () => {
   
   // 状态
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>(["all"]);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,6 +65,12 @@ const ContractList = () => {
   const getTeacherName = (teacherId: string) => {
     const teacher = getUser(teacherId);
     return teacher ? teacher.name : "未知教师";
+  };
+  
+  // 获取教师工号
+  const getTeacherEmployeeId = (teacherId: string) => {
+    const teacher = getUser(teacherId);
+    return teacher?.employeeId || "无工号";
   };
   
   // 获取部门名称
@@ -63,15 +87,13 @@ const ContractList = () => {
     // 搜索过滤
     const searchMatch = 
       searchTerm === "" || 
-      contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
       getTeacherName(contract.teacherId).toLowerCase().includes(searchTerm.toLowerCase());
     
     // 状态过滤
     const statusMatch = 
-      statusFilter === "all" || 
-      (statusFilter === "pending" && (contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR)) ||
-      (statusFilter === "rejected" && (contract.status === ContractStatus.REJECTED || contract.status === ContractStatus.TERMINATED)) ||
-      contract.status === statusFilter;
+      statusFilter.includes("all") || 
+      statusFilter.includes(contract.status);
     
     // 类型过滤
     const typeMatch = 
@@ -101,7 +123,7 @@ const ContractList = () => {
       case ContractStatus.REJECTED:
       case ContractStatus.TERMINATED: return "已作废";
       case ContractStatus.DRAFT: return "草稿";
-      case ContractStatus.EXPIRED: return "即将到期";
+      case ContractStatus.ARCHIVED: return "已归档";
       default: return status;
     }
   };
@@ -126,9 +148,23 @@ const ContractList = () => {
       case ContractStatus.REJECTED:
       case ContractStatus.TERMINATED: return "bg-red-100 text-red-800";
       case ContractStatus.DRAFT: return "bg-gray-100 text-gray-800";
-      case ContractStatus.EXPIRED: return "bg-yellow-100 text-yellow-800";
+      case ContractStatus.ARCHIVED: return "bg-amber-100 text-amber-800";
       default: return "bg-gray-100 text-gray-800";
     }
+  };
+  
+  // 判断合同是否已到期
+  const isContractExpired = (endDate: string): boolean => {
+    const today = new Date();
+    const contractEndDate = new Date(endDate);
+    return today > contractEndDate;
+  };
+
+  // 获取合同期限状态的标签样式
+  const getContractTermStatusClass = (isExpired: boolean): string => {
+    return isExpired 
+      ? "bg-red-100 text-red-800" 
+      : "bg-green-100 text-green-800";
   };
   
   return (
@@ -138,10 +174,22 @@ const ContractList = () => {
           <h1 className="text-2xl font-bold">全校合同列表</h1>
           <p className="text-gray-500">查看和管理所有教师合同</p>
         </div>
-        <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1">
-          <Download className="h-4 w-4" />
-          导出数据
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1" asChild>
+            <Link to="/admin/contracts/create">
+              <FilePlus className="h-4 w-4" />
+              创建合同
+            </Link>
+          </Button>
+          <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1">
+            <Upload className="h-4 w-4" />
+            导入合同
+          </Button>
+          <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1">
+            <Download className="h-4 w-4" />
+            导出数据
+          </Button>
+        </div>
       </div>
       
       {/* 过滤和搜索 */}
@@ -150,7 +198,7 @@ const ContractList = () => {
           <div className="flex-1 flex items-center relative">
             <Search className="absolute left-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="搜索合同标题或教师姓名"
+              placeholder="搜索合同编号或教师姓名"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -159,19 +207,102 @@ const ContractList = () => {
           
           <div className="flex flex-wrap gap-2">
             <div className="w-40">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="状态筛选" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">所有状态</SelectItem>
-                  <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
-                  <SelectItem value="pending">待签署</SelectItem>
-                  <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
-                  <SelectItem value="rejected">已作废</SelectItem>
-                  <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    状态筛选
+                    <Filter className="ml-2 h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="all-status" 
+                        checked={statusFilter.includes("all")}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setStatusFilter(["all"]);
+                          } else {
+                            setStatusFilter([]);
+                          }
+                        }}
+                      />
+                      <label htmlFor="all-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        全部状态
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="pending-status" 
+                        checked={statusFilter.includes(ContractStatus.PENDING_DEPT)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            const newFilter = statusFilter.filter(s => s !== "all");
+                            setStatusFilter([...newFilter, ContractStatus.PENDING_DEPT]);
+                          } else {
+                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.PENDING_DEPT));
+                          }
+                        }}
+                      />
+                      <label htmlFor="pending-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        待签署
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="approved-status" 
+                        checked={statusFilter.includes(ContractStatus.APPROVED)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            const newFilter = statusFilter.filter(s => s !== "all");
+                            setStatusFilter([...newFilter, ContractStatus.APPROVED]);
+                          } else {
+                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.APPROVED));
+                          }
+                        }}
+                      />
+                      <label htmlFor="approved-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        已签署
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="rejected-status" 
+                        checked={statusFilter.includes(ContractStatus.REJECTED)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            const newFilter = statusFilter.filter(s => s !== "all");
+                            setStatusFilter([...newFilter, ContractStatus.REJECTED]);
+                          } else {
+                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.REJECTED));
+                          }
+                        }}
+                      />
+                      <label htmlFor="rejected-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        已作废
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="archived-status" 
+                        checked={statusFilter.includes(ContractStatus.ARCHIVED)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            const newFilter = statusFilter.filter(s => s !== "all");
+                            setStatusFilter([...newFilter, ContractStatus.ARCHIVED]);
+                          } else {
+                            setStatusFilter(statusFilter.filter(s => s !== ContractStatus.ARCHIVED));
+                          }
+                        }}
+                      />
+                      <label htmlFor="archived-status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        已归档
+                      </label>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="w-40">
@@ -209,28 +340,31 @@ const ContractList = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px]">合同标题</TableHead>
+                    <TableHead className="w-[200px]">合同编号</TableHead>
                     <TableHead>教师姓名</TableHead>
+                    <TableHead>教师工号</TableHead>
                     <TableHead>所属部门</TableHead>
                     <TableHead>合同类型</TableHead>
                     <TableHead>状态</TableHead>
                     <TableHead>开始日期</TableHead>
                     <TableHead>结束日期</TableHead>
+                    <TableHead>合同期限</TableHead>
                     <TableHead className="text-right">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedContracts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                         没有找到符合条件的合同
                       </TableCell>
                     </TableRow>
                   ) : (
                     paginatedContracts.map((contract) => (
                       <TableRow key={contract.id}>
-                        <TableCell className="font-medium">{contract.title}</TableCell>
+                        <TableCell className="font-medium">{contract.id}</TableCell>
                         <TableCell>{getTeacherName(contract.teacherId)}</TableCell>
+                        <TableCell>{getTeacherEmployeeId(contract.teacherId)}</TableCell>
                         <TableCell>{getDepartmentName(contract.teacherId)}</TableCell>
                         <TableCell>{getTypeText(contract.type)}</TableCell>
                         <TableCell>
@@ -247,28 +381,65 @@ const ContractList = () => {
                               </span>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
                               <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
                               <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
                               <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
-                              <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                              <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
                         <TableCell>{new Date(contract.startDate).toLocaleDateString()}</TableCell>
                         <TableCell>{new Date(contract.endDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getContractTermStatusClass(isContractExpired(contract.endDate))}`}>
+                            {isContractExpired(contract.endDate) ? '已到期' : '未到期'}
+                          </span>
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-xs px-2 py-1 h-auto border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
-                            onClick={() => {
-                              // 处理续签逻辑
-                              console.log(`续签合同: ${contract.id}`);
-                            }}
-                          >
-                            续签合同
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">打开菜单</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {(contract.status === ContractStatus.PENDING_DEPT || contract.status === ContractStatus.PENDING_HR) && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    console.log(`编辑合同: ${contract.id}`);
+                                    // 处理编辑逻辑
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  <span>编辑</span>
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {contract.status === ContractStatus.APPROVED && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    console.log(`续签合同: ${contract.id}`);
+                                    // 处理续签逻辑
+                                  }}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  <span>续签合同</span>
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  console.log(`删除合同: ${contract.id}`);
+                                  // 处理删除逻辑
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>删除</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))

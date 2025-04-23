@@ -179,11 +179,10 @@ const ContractsManagement = () => {
           />
           <select className="border rounded px-2 py-1" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}>
             <option value="all">全部状态</option>
-            <option value="APPROVED">已批准</option>
-            <option value="REJECTED">已拒绝</option>
             <option value="PENDING_DEPT">待部门审批</option>
             <option value="PENDING_HR">待人事审批</option>
-            <option value="DRAFT">草稿</option>
+            <option value="APPROVED">已批准</option>
+            <option value="REJECTED">已拒绝</option>
             <option value="ARCHIVED">已归档</option>
             <option value="TERMINATED">已终止</option>
           </select>
@@ -233,7 +232,6 @@ const ContractsManagement = () => {
                               </span>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
                               <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
                               <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
                               <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
@@ -392,7 +390,6 @@ const ContractsManagement = () => {
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-          </div>
         </div>
         {/* 待续签 */}
         <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
@@ -581,7 +578,6 @@ const ContractsManagement = () => {
                             </span>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={ContractStatus.DRAFT}>草稿</SelectItem>
                             <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
                             <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
                             <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
