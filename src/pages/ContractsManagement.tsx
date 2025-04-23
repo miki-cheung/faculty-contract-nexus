@@ -29,8 +29,12 @@ const ContractsManagement = () => {
   const { contracts, loading } = useContracts();
   const { users, loading: usersLoading } = useUsers();
   const location = useLocation();
-  const [timeRange, setTimeRange] = useState("year");
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+
   const isContractList = location.pathname === "/contract-list";
 
   const getTeacherName = (teacherId: string) => {
@@ -38,7 +42,7 @@ const ContractsManagement = () => {
     return teacher ? teacher.name : "未知教师";
   };
 
-  let expiringContracts = contracts.filter(contract => {
+  let archivedContracts = contracts.filter(contract => {
     if (contract.status !== ContractStatus.APPROVED) return false;
     const endDate = new Date(contract.endDate);
     const now = new Date();
@@ -47,8 +51,8 @@ const ContractsManagement = () => {
     return diffDays <= 30 && diffDays > 0;
   });
 
-  if (expiringContracts.length === 0) {
-    expiringContracts = [
+  if (archivedContracts.length === 0) {
+    archivedContracts = [
       {
         id: 'mock1',
         title: '【示例】张三-全职教师合同',
@@ -84,12 +88,6 @@ const ContractsManagement = () => {
     { name: "临时", value: contracts.filter(c => c.type === ContractType.TEMPORARY).length },
     { name: "访问", value: contracts.filter(c => c.type === ContractType.VISITING).length },
   ];
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
 
   const filteredContracts = contracts.filter(contract => {
     const matchTitle = contract.title.includes(searchTerm);
@@ -145,8 +143,8 @@ const ContractsManagement = () => {
       contract.status === ContractStatus.REJECTED ||
       contract.status === ContractStatus.TERMINATED
   ).length;
-  const expiredContracts = contracts.filter(
-    (contract) => contract.status === ContractStatus.EXPIRED
+  const archivedContractsCount = contracts.filter(
+    (contract) => contract.status === ContractStatus.ARCHIVED
   ).length;
   const unsignedContracts = contracts.filter(
     (contract) => 
@@ -186,7 +184,7 @@ const ContractsManagement = () => {
             <option value="PENDING_DEPT">待部门审批</option>
             <option value="PENDING_HR">待人事审批</option>
             <option value="DRAFT">草稿</option>
-            <option value="EXPIRED">已到期</option>
+            <option value="ARCHIVED">已归档</option>
             <option value="TERMINATED">已终止</option>
           </select>
           <select className="border rounded px-2 py-1" value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setCurrentPage(1); }}>
@@ -239,7 +237,7 @@ const ContractsManagement = () => {
                               <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
                               <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
                               <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
-                              <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                              <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -315,16 +313,6 @@ const ContractsManagement = () => {
           </Button>
         </div>
         <div className="flex gap-2 items-center">
-          <select 
-            value={timeRange} 
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value="month">本月</option>
-            <option value="quarter">本季度</option>
-            <option value="year">本年度</option>
-            <option value="all">全部</option>
-          </select>
           <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1" asChild>
             <Link to="/admin/contracts/list">
               <FileText className="w-4 w-4" />
@@ -398,15 +386,6 @@ const ContractsManagement = () => {
             <div>
               <div className="text-lg font-medium text-gray-700">已签署</div>
               <div className="text-5xl font-bold mt-2">{approvedContracts}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-green-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
-                  </svg>
-                  3.4%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -415,21 +394,12 @@ const ContractsManagement = () => {
             </div>
           </div>
         </div>
-        {/* 即将到期 */}
+        {/* 待续签 */}
         <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
           <div className="flex justify-between items-start">
             <div>
-              <div className="text-lg font-medium text-gray-700">即将到期</div>
-              <div className="text-5xl font-bold mt-2">{expiringContracts.length}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-red-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
-                  </svg>
-                  1.2%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
+              <div className="text-lg font-medium text-gray-700">待续签</div>
+              <div className="text-5xl font-bold mt-2">{archivedContracts.length}</div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -438,21 +408,12 @@ const ContractsManagement = () => {
             </div>
           </div>
         </div>
-        {/* 待签署 */}
+        {/* 签署中 */}
         <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
           <div className="flex justify-between items-start">
             <div>
-              <div className="text-lg font-medium text-gray-700">月度总数</div>
+              <div className="text-lg font-medium text-gray-700">签署中</div>
               <div className="text-5xl font-bold mt-2">{pendingContracts + approvedContracts}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-red-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
-                  </svg>
-                  0.2%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -467,15 +428,6 @@ const ContractsManagement = () => {
             <div>
               <div className="text-lg font-medium text-gray-700">未签署</div>
               <div className="text-5xl font-bold mt-2">{unsignedContracts}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-green-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
-                  </svg>
-                  2.5%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -485,21 +437,12 @@ const ContractsManagement = () => {
             </div>
           </div>
         </div>
-        {/* 草稿 */}
+        {/* 已归档 */}
         <div className="col-span-1 row-span-1 bg-white rounded-xl shadow-sm p-5">
           <div className="flex justify-between items-start">
             <div>
-              <div className="text-lg font-medium text-gray-700">草稿</div>
+              <div className="text-lg font-medium text-gray-700">已归档</div>
               <div className="text-5xl font-bold mt-2">{draftContracts}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-green-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 9.586 14.586 7H12z" clipRule="evenodd" />
-                  </svg>
-                  1.8%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -514,15 +457,6 @@ const ContractsManagement = () => {
             <div>
               <div className="text-lg font-medium text-gray-700">已作废</div>
               <div className="text-5xl font-bold mt-2">{rejectedContracts}</div>
-              <div className="flex items-center mt-2 text-sm">
-                <span className="text-red-500 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
-                  </svg>
-                  0.5%
-                </span>
-                <span className="text-gray-400 ml-1">自上月以来</span>
-              </div>
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -549,7 +483,7 @@ const ContractsManagement = () => {
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {expiringContracts.map((contract) => {
+              {archivedContracts.map((contract) => {
                 const endDate = new Date(contract.endDate);
                 const now = new Date();
                 const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
@@ -651,7 +585,7 @@ const ContractsManagement = () => {
                             <SelectItem value={ContractStatus.PENDING_DEPT}>待签署</SelectItem>
                             <SelectItem value={ContractStatus.APPROVED}>已签署</SelectItem>
                             <SelectItem value={ContractStatus.REJECTED}>已作废</SelectItem>
-                            <SelectItem value={ContractStatus.EXPIRED}>即将到期</SelectItem>
+                            <SelectItem value={ContractStatus.ARCHIVED}>已归档</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>

@@ -34,7 +34,7 @@ export enum ContractStatus {
   PENDING_HR = "pending_hr",
   APPROVED = "approved",
   REJECTED = "rejected",
-  EXPIRED = "expired",
+  ARCHIVED = "archived",
   TERMINATED = "terminated"
 }
 
