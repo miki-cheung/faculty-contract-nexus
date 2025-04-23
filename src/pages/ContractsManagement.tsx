@@ -79,6 +79,58 @@ const ContractsManagement = () => {
         createdAt: new Date().toISOString(),
         data: { position: "兼职教授", hourly_rate: 800 }
       },
+      {
+        id: 'mock3',
+        title: '【示例】王五-临时教师合同',
+        teacherId: users[2]?.id || 'u3',
+        startDate: '2024-07-01',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 15); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.TEMPORARY,
+        templateId: 't3',
+        createdAt: new Date().toISOString(),
+        data: { position: "临时讲师", project: "暑期课程" }
+      },
+      {
+        id: 'mock4',
+        title: '【示例】赵六-访问学者合同',
+        teacherId: users[3]?.id || 'u4',
+        startDate: '2024-06-15',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 5); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.VISITING,
+        templateId: 't4',
+        createdAt: new Date().toISOString(),
+        data: { position: "访问学者", research_area: "人工智能" }
+      },
+      {
+        id: 'mock5',
+        title: '【示例】钱七-全职副教授合同',
+        teacherId: users[0]?.id || 'u1',
+        startDate: '2024-05-01',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 18); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.FULL_TIME,
+        templateId: 't1',
+        createdAt: new Date().toISOString(),
+        data: { position: "副教授", salary: 280000 }
+      },
+      {
+        id: 'mock6',
+        title: '【示例】孙八-兼职讲师合同',
+        teacherId: users[1]?.id || 'u2',
+        startDate: '2024-04-15',
+        endDate: (() => { const d = new Date(); d.setDate(d.getDate() + 28); return d.toISOString().slice(0,10); })(),
+        status: ContractStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+        type: ContractType.PART_TIME,
+        templateId: 't2',
+        createdAt: new Date().toISOString(),
+        data: { position: "兼职讲师", hourly_rate: 600 }
+      }
     ];
   }
 
@@ -159,12 +211,6 @@ const ContractsManagement = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold">全校合同列表</h2>
           <div className="flex gap-2">
-            <Button variant="default" asChild>
-              <Link to="/create-contract" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                创建合同
-              </Link>
-            </Button>
             <Button variant="outline" onClick={() => window.history.back()}>返回</Button>
           </div>
         </div>
@@ -300,17 +346,6 @@ const ContractsManagement = () => {
             <h1 className="text-2xl font-bold">合同管理</h1>
             <p className="text-gray-500">管理所有教师合同</p>
           </div>
-          <div>
-            <Button 
-              className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
-              asChild
-            >
-              <Link to="/admin/contracts/create">
-                <FilePlus className="w-4 h-4" />
-                创建合同
-              </Link>
-            </Button>
-          </div>
         </div>
         <div className="flex gap-2 items-center">
           <Button variant="outline" className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1" asChild>
@@ -417,7 +452,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" />
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
               </svg>
             </div>
           </div>
@@ -431,8 +466,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -446,7 +480,8 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -460,8 +495,7 @@ const ContractsManagement = () => {
             </div>
             <div className="p-2 rounded-md border border-gray-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -483,7 +517,7 @@ const ContractsManagement = () => {
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {archivedContracts.map((contract) => {
+              {archivedContracts.slice(0, 4).map((contract) => {
                 const endDate = new Date(contract.endDate);
                 const now = new Date();
                 const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
@@ -500,7 +534,7 @@ const ContractsManagement = () => {
                       <div className="space-y-2 text-sm text-gray-500 mb-3">
                         <div className="flex items-center gap-2">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                           </svg>
                           <span>{getTeacherName(contract.teacherId)}</span>
@@ -525,6 +559,19 @@ const ContractsManagement = () => {
                 );
               })}
             </div>
+            {archivedContracts.length > 4 && (
+              <div className="flex justify-center mt-4">
+                <Button 
+                  variant="outline" 
+                  className="border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center gap-1"
+                  asChild
+                >
+                  <Link to="/admin/contracts/list">
+                    查看更多即将到期合同
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -535,10 +582,6 @@ const ContractsManagement = () => {
             <h3 className="text-lg font-medium">签署中的合同</h3>
             <p className="text-sm text-gray-500">显示当前正在签署流程中的合同</p>
           </div>
-          <Button variant="outline" size="sm" className="flex items-center gap-1 border border-blue-500 text-blue-500 hover:bg-blue-50">
-            <Download className="h-4 w-4" />
-            导出
-          </Button>
         </div>
         {loading || usersLoading ? (
           <div className="text-center py-4">加载中...</div>
